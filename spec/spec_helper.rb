@@ -1,8 +1,47 @@
 require 'bundler/setup'
 
 RSpec.configure do |config|
+  persist_between_runs = ENV['PERSIST_BETWEEN_RUNS']
+
+  def current_public_ip_cidr
+    "#{open('http://whatismyip.akamai.com').read}/32"
+  end
+
   config.example_status_persistence_file_path = '.rspec_status'
-  config.expect_with :rspec do |c|
-    c.syntax = :expect
+
+  config.add_setting :region, default: 'eu-west-2'
+
+  config.before(:suite) do
+    variables = RSpec.configuration
+    configuration_directory = Paths.from_project_root_directory('src')
+
+    puts
+    puts "Provisioning with deployment identifier: #{variables.deployment_identifier}"
+    puts
+
+    Terraform.clean
+    Terraform.apply(directory: configuration_directory, vars: {
+        region: variables.region
+    })
+
+    puts
+  end
+
+  config.after(:suite) do
+    unless persist_between_runs
+      variables = RSpec.configuration
+      configuration_directory = Paths.from_project_root_directory('src')
+
+      puts
+      puts "Destroying with deployment identifier: #{variables.deployment_identifier}"
+      puts
+
+      Terraform.clean
+      Terraform.destroy(directory: configuration_directory, vars: {
+          region: variables.region
+      })
+
+      puts
+    end
   end
 end
