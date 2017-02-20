@@ -1,7 +1,7 @@
 require 'bundler/setup'
 
 RSpec.configure do |config|
-  persist_between_runs = ENV['PERSIST_BETWEEN_RUNS']
+  deployment_identifier = ENV['DEPLOYMENT_IDENTIFIER']
 
   def current_public_ip_cidr
     "#{open('http://whatismyip.akamai.com').read}/32"
@@ -28,7 +28,7 @@ RSpec.configure do |config|
   end
 
   config.after(:suite) do
-    unless persist_between_runs
+    unless deployment_identifier
       variables = RSpec.configuration
       configuration_directory = Paths.from_project_root_directory('src')
 
