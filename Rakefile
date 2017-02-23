@@ -24,12 +24,10 @@ namespace :provision do
     puts "Provisioning with deployment identifier: #{deployment_identifier}"
 
     Terraform.clean
-    Terraform.apply(directory: configuration_directory, vars: {
-        region: 'eu-west-2',
-        vpc_cidr: "10.1.0.0/16",
-        component: 'integration-tests',
-        deployment_identifier: deployment_identifier
-    })
+    Terraform.apply(
+        directory: configuration_directory,
+        vars: terraform_vars_for(
+            deployment_identifier: deployment_identifier))
   end
 end
 
@@ -42,11 +40,17 @@ namespace :destroy do
     puts "Destroying with deployment identifier: #{deployment_identifier}"
 
     Terraform.clean
-    Terraform.destroy(directory: configuration_directory, vars: {
-        region: 'eu-west-2',
-        vpc_cidr: "10.1.0.0/16",
-        component: 'integration-tests',
-        deployment_identifier: deployment_identifier
-    })
+    Terraform.destroy(
+        directory: configuration_directory,
+        force: true,
+        vars: terraform_vars_for(
+            deployment_identifier: deployment_identifier))
   end
+end
+
+def terraform_vars_for(opts)
+  {
+      region: 'eu-west-2',
+      deployment_identifier: opts[:deployment_identifier]
+  }
 end

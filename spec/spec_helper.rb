@@ -1,5 +1,16 @@
 require 'bundler/setup'
 
+require 'awspec'
+require 'support/awspec'
+
+require 'support/shared_contexts/terraform'
+
+require 'securerandom'
+require 'netaddr'
+require 'open-uri'
+
+require_relative '../lib/terraform'
+
 RSpec.configure do |config|
   deployment_identifier = ENV['DEPLOYMENT_IDENTIFIER']
 
@@ -37,9 +48,12 @@ RSpec.configure do |config|
       puts
 
       Terraform.clean
-      Terraform.destroy(directory: configuration_directory, vars: {
-          region: variables.region
-      })
+      Terraform.destroy(
+          directory: configuration_directory,
+          force: true,
+          vars: {
+            region: variables.region
+        })
 
       puts
     end
