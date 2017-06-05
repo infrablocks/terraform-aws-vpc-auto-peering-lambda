@@ -22,7 +22,8 @@ namespace :provision do
   desc 'Provisions module in AWS'
   task :aws, [:deployment_identifier] => ['terraform:ensure'] do |_, args|
     deployment_identifier = args.deployment_identifier || DEPLOYMENT_IDENTIFIER
-    configuration_directory = Paths.from_project_root_directory('src')
+    configuration_directory =
+        Paths.from_project_root_directory('spec', 'infra')
 
     puts "Provisioning with deployment identifier: #{deployment_identifier}"
 
@@ -38,7 +39,8 @@ namespace :destroy do
   desc 'Destroys module in AWS'
   task :aws, [:deployment_identifier] => ['terraform:ensure'] do |_, args|
     deployment_identifier = args.deployment_identifier || DEPLOYMENT_IDENTIFIER
-    configuration_directory = Paths.from_project_root_directory('src')
+    configuration_directory =
+        Paths.from_project_root_directory('spec', 'infra')
 
     puts "Destroying with deployment identifier: #{deployment_identifier}"
 
