@@ -25,6 +25,13 @@ run/logs/
 # RSpec
 .rspec_status
 
+# Python
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+
 # Terraform
 .terraform
 *.tfstate
