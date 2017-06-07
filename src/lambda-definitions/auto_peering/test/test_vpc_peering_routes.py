@@ -336,3 +336,153 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
 
         vpc2_route_table_1_route.delete.assert_called()
         vpc2_route_table_2_route.delete.assert_called()
+
+    def test_handles_no_matching_route_tables(self):
+        vpc1 = Mock(name="VPC 1")
+        vpc2 = Mock(name="VPC 2")
+        ec2_client = Mock()
+        logger = Mock()
+
+        ec2_client.route_tables = Mock(name="VPC route tables")
+        ec2_client.route_tables.filter = Mock(
+            name="Filtered VPC route tables",
+            side_effect=mock_filter_for(
+                vpc1=vpc1, vpc1_route_tables=[],
+                vpc2=vpc2, vpc2_route_tables=[]))
+
+        vpc_peering_connection = Mock(name="VPC peering connection")
+        vpc_peering_relationship = Mock()
+        vpc_peering_relationship.fetch = Mock(
+            return_value=vpc_peering_connection)
+
+        vpc_peering_routes = VPCPeeringRoutes(
+            vpc1, vpc2, vpc_peering_relationship, ec2_client, logger)
+
+        try:
+            vpc_peering_routes.destroy()
+        except Exception as exception:
+            self.fail(
+                'Expected no exception but encountered: {0}'.format(exception))
+
+    def test_logs_that_routes_are_being_deleted_for_a_vpc(self):
+        vpc1 = Mock(name="VPC 1")
+        vpc2 = Mock(name="VPC 2")
+
+        ec2_client = Mock()
+        logger = Mock()
+
+        vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
+        vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
+
+        ec2_client.route_tables = Mock(name="VPC route tables")
+        ec2_client.route_tables.filter = Mock(
+            name="Filtered VPC route tables",
+            side_effect=mock_filter_for(
+                vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
+                vpc2=vpc2, vpc2_route_tables=[]))
+
+        ec2_client.Route = Mock(
+            name="Route constructor",
+            side_effect=mock_route_for(
+                {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
+                 'return': vpc1_route_table_1_route}))
+
+        vpc_peering_connection = Mock(name="VPC peering connection")
+        vpc_peering_relationship = Mock()
+        vpc_peering_relationship.fetch = Mock(
+            return_value=vpc_peering_connection)
+
+        vpc_peering_routes = VPCPeeringRoutes(
+            vpc1, vpc2, vpc_peering_relationship, ec2_client, logger)
+
+        vpc_peering_routes.destroy()
+
+        logger.debug.assert_any_call(
+            "Removing routes from private subnets in: '%s' pointing at "
+            "'%s:%s:%s'.",
+            vpc1.id, vpc2.id, vpc2.cidr_block, vpc_peering_connection.id)
+
+    def test_logs_that_route_deletion_succeeded(self):
+        vpc1 = Mock(name="VPC 1")
+        vpc2 = Mock(name="VPC 2")
+
+        ec2_client = Mock()
+        logger = Mock()
+
+        vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
+        vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
+
+        ec2_client.route_tables = Mock(name="VPC route tables")
+        ec2_client.route_tables.filter = Mock(
+            name="Filtered VPC route tables",
+            side_effect=mock_filter_for(
+                vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
+                vpc2=vpc2, vpc2_route_tables=[]))
+
+        ec2_client.Route = Mock(
+            name="Route constructor",
+            side_effect=mock_route_for(
+                {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
+                 'return': vpc1_route_table_1_route}))
+
+        vpc_peering_connection = Mock(name="VPC peering connection")
+        vpc_peering_relationship = Mock()
+        vpc_peering_relationship.fetch = Mock(
+            return_value=vpc_peering_connection)
+
+        vpc_peering_routes = VPCPeeringRoutes(
+            vpc1, vpc2, vpc_peering_relationship, ec2_client, logger)
+
+        vpc_peering_routes.destroy()
+
+        logger.debug.assert_any_call(
+            "Route deletion succeeded for '%s'. Continuing.",
+            vpc1_route_table_1.id)
+
+    def test_logs_that_route_deletion_failed_and_continues_on_exception(self):
+        vpc1 = Mock(name="VPC 1")
+        vpc2 = Mock(name="VPC 2")
+
+        ec2_client = Mock()
+        logger = Mock()
+
+        vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
+        vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
+
+        vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
+        vpc2_route_table_1_route = Mock(name="VPC 2 route table 1 route")
+
+        ec2_client.route_tables = Mock(name="VPC route tables")
+        ec2_client.route_tables.filter = Mock(
+            name="Filtered VPC route tables",
+            side_effect=mock_filter_for(
+                vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
+                vpc2=vpc2, vpc2_route_tables=[vpc2_route_table_1]))
+
+        ec2_client.Route = Mock(
+            name="Route constructor",
+            side_effect=mock_route_for(
+                {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
+                 'return': vpc1_route_table_1_route},
+                {'arguments': [vpc2_route_table_1.id, vpc1.cidr_block],
+                 'return': vpc2_route_table_1_route}))
+
+        vpc_peering_connection = Mock(name="VPC peering connection")
+        vpc_peering_relationship = Mock()
+        vpc_peering_relationship.fetch = Mock(
+            return_value=vpc_peering_connection)
+
+        vpc1_route_table_1_route.delete = Mock(
+            side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
+
+        vpc_peering_routes = VPCPeeringRoutes(
+            vpc1, vpc2, vpc_peering_relationship, ec2_client, logger)
+
+        vpc_peering_routes.destroy()
+
+        logger.warn.assert_any_call(
+            "Route deletion failed for '%s'. It may have already been "
+            "deleted. Continuing.",
+            vpc1_route_table_1.id)
+
+        vpc2_route_table_1_route.delete.assert_called()

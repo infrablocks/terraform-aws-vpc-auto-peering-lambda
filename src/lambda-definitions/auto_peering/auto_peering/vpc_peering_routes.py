@@ -49,22 +49,22 @@ class VPCPeeringRoutes(object):
                 route = self.ec2_client.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
-                # self.logger.debug(
-                #     "Route removal succeeded for '%s'. Continuing.",
-                #     route_table.id)
+                self.logger.debug(
+                    "Route deletion succeeded for '%s'. Continuing.",
+                    route_table.id)
             except ClientError:
                 self.logger.warn(
-                    # "Route removal failed for '%s'. It may already exist. "
-                    "Continuing.",
+                    "Route deletion failed for '%s'. It may have already been "
+                    "deleted. Continuing.",
                     route_table.id)
 
-
     def __deletes_routes_for(self, source_vpc, destination_vpc,
-                            vpc_peering_connection):
-        # self.logger.debug(
-        #     "Adding routes to private subnets in: '%s' pointing at '%s:%s:%s'.",
-        #     source_vpc.id, destination_vpc.id, destination_vpc.cidr_block,
-        #     vpc_peering_connection.id)
+                             vpc_peering_connection):
+        self.logger.debug(
+            "Removing routes from private subnets in: '%s' pointing at "
+            "'%s:%s:%s'.",
+            source_vpc.id, destination_vpc.id, destination_vpc.cidr_block,
+            vpc_peering_connection.id)
 
         self.__delete_routes_in(
             self.__private_route_tables_for(source_vpc),
@@ -78,6 +78,6 @@ class VPCPeeringRoutes(object):
 
     def destroy(self):
         vpc_peering_connection = self.vpc_peering_relationship.fetch()
+
         self.__deletes_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
         self.__deletes_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
-        return None
