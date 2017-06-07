@@ -8,26 +8,24 @@ class VPCPeeringRelationship(object):
         self.ec2_client = ec2_client
         self.logger = logger
 
-    def fetch(self):
-        peering_connection = next(
+    def __peering_connection_for(self, vpc1, vpc2):
+        return next(
             self.ec2_client.vpc_peering_connections.filter(
                 Filters=[
                     {'Name': 'accepter-vpc-info.vpc-id',
-                     'Values': [self.vpc1.id]},
+                     'Values': [vpc1.id]},
                     {'Name': 'requester-vpc-info.vpc-id',
-                     'Values': [self.vpc2.id]}]),
+                     'Values': [vpc2.id]}]),
             None)
+
+    def fetch(self):
+        peering_connection = self.__peering_connection_for(
+            self.vpc1, self.vpc2)
         if peering_connection:
             return peering_connection
 
-        peering_connection = next(
-            self.ec2_client.vpc_peering_connections.filter(
-                Filters=[
-                    {'Name': 'accepter-vpc-info.vpc-id',
-                     'Values': [self.vpc2.id]},
-                    {'Name': 'requester-vpc-info.vpc-id',
-                     'Values': [self.vpc1.id]}]),
-            None)
+        peering_connection = self.__peering_connection_for(
+            self.vpc2, self.vpc1)
         if peering_connection:
             return peering_connection
 
