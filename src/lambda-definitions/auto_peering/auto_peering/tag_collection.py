@@ -1,0 +1,23 @@
+class TagCollection(object):
+    def __init__(self, tagged):
+        self.tags = tagged.tags
+
+    def __split_and_strip(self, comma_separated_tag_value):
+        return list(filter(None,
+                      (tag_value.strip()
+                       for tag_value
+                       in comma_separated_tag_value.split(','))))
+
+    def find_value(self, key, default=''):
+        if self.tags is None:
+            return default
+
+        return next(
+            (tag['Value'] for tag in self.tags if tag['Key'] == key),
+            default)
+
+    def find_values(self, key):
+        comma_separated_tag_value = self.find_value(key)
+        tag_values = self.__split_and_strip(comma_separated_tag_value)
+
+        return tag_values

@@ -23,7 +23,7 @@ class S3EventSNSMessage(object):
     def action(self):
         action = 'unknown'
         if re.compile('ObjectCreated.*').match(self.__s3_event_name()):
-            action = 'create'
+            action = 'provision'
         if re.compile('ObjectRemoved.*').match(self.__s3_event_name()):
             action = 'destroy'
 

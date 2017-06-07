@@ -21,11 +21,11 @@ class TestS3EventSNSMessage(unittest.TestCase):
 
         message = S3EventSNSMessage(event)
 
-        self.assertEqual(message.action(), 'create')
+        self.assertEqual(message.action(), 'provision')
 
     def test_has_action_destroy_when_event_represents_destroy(self):
         event = sns_message_containing(
-            s3_event_for('ObjectRemoved:Delete', 'vpc-created/vpc-4e1ed427'))
+            s3_event_for('ObjectRemoved:Delete', 'vpc-existence/vpc-4e1ed427'))
 
         message = S3EventSNSMessage(event)
 
