@@ -58,11 +58,14 @@ class VPCPeeringRelationship(object):
         if vpc_peering_connection:
             self.logger.debug(
                 "Destroying peering connection between: '%s' and: '%s'",
-                    vpc_peering_connection.requester_vpc.id,
-                    vpc_peering_connection.accepter_vpc.id)
+                vpc_peering_connection.requester_vpc.id,
+                vpc_peering_connection.accepter_vpc.id)
             vpc_peering_connection.delete()
         else:
             self.logger.debug(
                 "No peering connection to destroy between: '%s' and: '%s'",
                 self.vpc1.id,
                 self.vpc2.id)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

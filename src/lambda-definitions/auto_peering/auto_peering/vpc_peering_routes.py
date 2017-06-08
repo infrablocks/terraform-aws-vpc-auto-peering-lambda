@@ -81,3 +81,6 @@ class VPCPeeringRoutes(object):
 
         self.__deletes_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
         self.__deletes_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
