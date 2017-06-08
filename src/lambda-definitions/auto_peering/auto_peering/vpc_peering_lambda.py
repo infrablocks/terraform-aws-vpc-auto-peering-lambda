@@ -8,7 +8,9 @@ def peer_vpcs_for(event, context):
 
     # log.ingo('what are we doing?')
     # log.info('looking up dependencies for: ...')
-    # all_dependencies = VPCDependencies.resolve_for(event.target)
+    vpc_dependencies = VPCDependencies(ec2_client, logger)
+    vpc_dependencies_for_target = \
+        vpc_dependencies.resolve_for(event.target)
     # log.info('found dependencies')
     # for dependency in all_dependencies:
     #     log.info('establishing peering relationship')

@@ -9,3 +9,6 @@ class VPCDependency(object):
         self.peering_routes = VPCPeeringRoutes(
             vpc1, vpc2, self.peering_relationship,
             ec2_client, logger)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
