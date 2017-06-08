@@ -1,7 +1,7 @@
 from itertools import repeat
 
 from auto_peering.tag_collection import TagCollection
-from auto_peering.vpc_dependency import VPCDependency
+from auto_peering.vpc_link import VPCLink
 
 
 class AllVPCs(object):
@@ -48,18 +48,18 @@ class AllVPCs(object):
         ]
 
 
-class VPCDependencies(object):
+class VPCLinks(object):
     def __init__(self, ec2_client, logger):
         self.ec2_client = ec2_client
         self.logger = logger
 
     def __vpc_dependency_for(self, source, target):
-        return VPCDependency(
+        return VPCLink(
             source, target, self.ec2_client, self.logger)
 
     def resolve_for(self, target_vpc_id):
         self.logger.debug(
-            "Computing VPC dependencies for VPC with ID: '%s'.",
+            "Computing VPC links for VPC with ID: '%s'.",
             target_vpc_id)
         all_vpcs = AllVPCs(self.ec2_client)
 

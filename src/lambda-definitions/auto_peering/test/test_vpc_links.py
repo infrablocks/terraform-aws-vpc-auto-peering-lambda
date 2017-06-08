@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from auto_peering.vpc_dependencies import VPCDependencies
-from auto_peering.vpc_dependency import VPCDependency
+from auto_peering.vpc_links import VPCLinks
+from auto_peering.vpc_link import VPCLink
 
 
 def tags_for(component, dependencies):
@@ -12,7 +12,7 @@ def tags_for(component, dependencies):
     ]
 
 
-class TestVPCDependencies(unittest.TestCase):
+class TestVPCLinks(unittest.TestCase):
     def test_resolve_dependencies_for_target_vpc(self):
         target_vpc_id = "vpc-12345678"
 
@@ -43,18 +43,17 @@ class TestVPCDependencies(unittest.TestCase):
                  other_vpc,
                  dependency_vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        resolved_vpc_dependencies = vpc_dependencies. \
-            resolve_for(target_vpc_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)
 
         self.assertEqual(
-            resolved_vpc_dependencies,
-            {VPCDependency(target_vpc, dependency_vpc1,
-                           ec2_client, logger),
-             VPCDependency(target_vpc, dependency_vpc2,
-                           ec2_client, logger),
-             VPCDependency(dependent_vpc, target_vpc,
-                           ec2_client, logger)})
+            resolved_vpc_links,
+            {VPCLink(target_vpc, dependency_vpc1,
+                     ec2_client, logger),
+             VPCLink(target_vpc, dependency_vpc2,
+                     ec2_client, logger),
+             VPCLink(dependent_vpc, target_vpc,
+                     ec2_client, logger)})
 
     def test_resolves_no_duplicates(self):
         vpc1_id = "vpc-12345678"
@@ -75,14 +74,14 @@ class TestVPCDependencies(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        resolved_vpc_dependencies = vpc_dependencies. \
+        vpc_links = VPCLinks(ec2_client, logger)
+        resolved_vpc_links = vpc_links. \
             resolve_for(vpc1_id)
 
         self.assertEqual(
-            resolved_vpc_dependencies,
-            {VPCDependency(vpc1, vpc2,
-                           ec2_client, logger)})
+            resolved_vpc_links,
+            {VPCLink(vpc1, vpc2,
+                     ec2_client, logger)})
 
     def test_logs_found_target_vpc(self):
         vpc1_id = "vpc-12345678"
@@ -103,11 +102,11 @@ class TestVPCDependencies(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        vpc_dependencies.resolve_for(vpc1_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
-            "Computing VPC dependencies for VPC with ID: '%s'.", vpc1.id)
+            "Computing VPC links for VPC with ID: '%s'.", vpc1.id)
         logger.debug.assert_any_call(
             "Found target VPC with ID: '%s', component: '%s' "
             "and dependencies: '%s'.",
@@ -127,8 +126,8 @@ class TestVPCDependencies(unittest.TestCase):
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        vpc_dependencies.resolve_for(vpc1_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
             "No VPC found with ID: '%s'. Aborting.", vpc1.id)
@@ -147,10 +146,10 @@ class TestVPCDependencies(unittest.TestCase):
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        resolved_vpc_dependencies = vpc_dependencies.resolve_for(vpc1_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
-        self.assertEqual(resolved_vpc_dependencies, set())
+        self.assertEqual(resolved_vpc_links, set())
 
     def test_ignores_missing_dependencies(self):
         vpc1_id = "vpc-12345678"
@@ -171,13 +170,13 @@ class TestVPCDependencies(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        resolved_vpc_dependencies = vpc_dependencies.resolve_for(vpc1_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
-        self.assertEqual(len(resolved_vpc_dependencies), 1)
+        self.assertEqual(len(resolved_vpc_links), 1)
         self.assertEqual(
-            resolved_vpc_dependencies,
-            {VPCDependency(vpc1, vpc2, ec2_client, logger)})
+            resolved_vpc_links,
+            {VPCLink(vpc1, vpc2, ec2_client, logger)})
 
     def test_logs_dependency_vpcs(self):
         target_vpc_id = "vpc-12345678"
@@ -204,9 +203,8 @@ class TestVPCDependencies(unittest.TestCase):
                  target_vpc,
                  dependency_vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        vpc_dependencies. \
-            resolve_for(target_vpc_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(
             "Found dependency VPCs: [%s]",
@@ -237,8 +235,8 @@ class TestVPCDependencies(unittest.TestCase):
                  target_vpc,
                  dependent_vpc2]))
 
-        vpc_dependencies = VPCDependencies(ec2_client, logger)
-        vpc_dependencies.resolve_for(target_vpc_id)
+        vpc_links = VPCLinks(ec2_client, logger)
+        vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(
             "Found dependent VPCs: [%s]",

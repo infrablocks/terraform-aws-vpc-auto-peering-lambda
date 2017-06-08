@@ -2,7 +2,7 @@ from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
 from auto_peering.vpc_peering_routes import VPCPeeringRoutes
 
 
-class VPCDependency(object):
+class VPCLink(object):
     def __init__(self, vpc1, vpc2, ec2_client, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
