@@ -67,6 +67,9 @@ class VPCPeeringRelationship(object):
                 self.vpc1.id,
                 self.vpc2.id)
 
+    def perform(self, action):
+        getattr(self, action)()
+
     def _to_dict(self):
         return {
             'vpcs': frozenset([self.vpc1, self.vpc2]),
