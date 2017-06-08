@@ -1,14 +1,13 @@
 import boto3
 import logging
 import json
+from auto_peering.s3_event_sns_message import S3EventSNSMessage
+from auto_peering.vpc_links import VPCLinks
 
 logging.getLogger('boto3').setLevel(logging.WARNING)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-from auto_peering.s3_event_sns_message import S3EventSNSMessage
-from auto_peering.vpc_links import VPCLinks
 
 
 def peer_vpcs_for(event, context):
