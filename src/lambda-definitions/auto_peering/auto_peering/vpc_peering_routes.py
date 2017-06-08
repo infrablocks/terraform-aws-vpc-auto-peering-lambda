@@ -82,5 +82,23 @@ class VPCPeeringRoutes(object):
         self.__deletes_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
         self.__deletes_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
 
+    def _to_dict(self):
+        return {
+            'vpcs': frozenset([self.vpc1, self.vpc2]),
+            'vpc_peering_relationship': self.vpc_peering_relationship,
+            'ec2_client': self.ec2_client,
+            'logger': self.logger
+        }
+
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        if isinstance(other, self.__class__):
+            return self._to_dict() == other._to_dict()
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(sorted(self._to_dict().items())))

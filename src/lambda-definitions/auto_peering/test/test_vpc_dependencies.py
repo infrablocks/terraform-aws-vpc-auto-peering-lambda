@@ -39,11 +39,11 @@ class TestVPCDependencies(unittest.TestCase):
         ec2_client.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
-                [target_vpc,
-                 dependency_vpc1,
-                 dependency_vpc2,
+                [dependency_vpc1,
+                 target_vpc,
                  dependent_vpc,
-                 other_vpc]))
+                 other_vpc,
+                 dependency_vpc2]))
 
         vpc_dependencies = VPCDependencies(ec2_client, logger)
         resolved_vpc_dependencies = vpc_dependencies. \
@@ -51,10 +51,39 @@ class TestVPCDependencies(unittest.TestCase):
 
         self.assertEqual(
             resolved_vpc_dependencies,
-            [VPCDependency(target_vpc, dependency_vpc1,
+            {VPCDependency(target_vpc, dependency_vpc1,
                            ec2_client, logger),
              VPCDependency(target_vpc, dependency_vpc2,
                            ec2_client, logger),
              VPCDependency(dependent_vpc, target_vpc,
-                           ec2_client, logger)]
+                           ec2_client, logger)}
         )
+
+    def test_resolves_no_duplicates(self):
+        self.maxDiff = None
+        vpc1_id = "vpc-12345678"
+
+        vpc1 = Mock(name="VPC 1")
+        vpc1.id = vpc1_id
+        vpc1.tags = tags_for('thing1', ['thing2'])
+
+        vpc2 = Mock(name="VPC 2")
+        vpc2.tags = tags_for('thing2', ['thing1'])
+
+        ec2_client = Mock(name="EC2 client")
+        logger = Mock(name="Logger")
+
+        ec2_client.vpcs.all = Mock(
+            name="All VPCs",
+            return_value=iter(
+                [vpc1,
+                 vpc2]))
+
+        vpc_dependencies = VPCDependencies(ec2_client, logger)
+        resolved_vpc_dependencies = vpc_dependencies. \
+            resolve_for(vpc1_id)
+
+        self.assertEqual(
+            resolved_vpc_dependencies,
+            {VPCDependency(vpc1, vpc2,
+                           ec2_client, logger)})

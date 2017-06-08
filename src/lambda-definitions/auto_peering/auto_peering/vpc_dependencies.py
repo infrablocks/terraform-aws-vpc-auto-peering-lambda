@@ -6,7 +6,7 @@ from auto_peering.vpc_dependency import VPCDependency
 
 class AllVPCs(object):
     def __init__(self, ec2_client):
-        self.all_vpcs = ec2_client.vpcs.all()
+        self.all_vpcs = list(ec2_client.vpcs.all())
 
     def find_by_id(self, vpc_id):
         return next(
@@ -64,4 +64,4 @@ class VPCDependencies(object):
             in vpc_pairs
         ]
 
-        return vpc_dependencies
+        return frozenset(vpc_dependencies)

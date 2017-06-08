@@ -67,5 +67,22 @@ class VPCPeeringRelationship(object):
                 self.vpc1.id,
                 self.vpc2.id)
 
+    def _to_dict(self):
+        return {
+            'vpcs': frozenset([self.vpc1, self.vpc2]),
+            'ec2_client': self.ec2_client,
+            'logger': self.logger
+        }
+
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        if isinstance(other, self.__class__):
+            return self._to_dict() == other._to_dict()
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(sorted(self._to_dict().items())))
