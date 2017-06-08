@@ -28,6 +28,8 @@ namespace :provision do
     puts "Provisioning with deployment identifier: #{deployment_identifier}"
 
     Terraform.clean
+    Terraform.get(
+        directory: configuration_directory)
     Terraform.apply(
         directory: configuration_directory,
         vars: terraform_vars_for(
@@ -45,6 +47,8 @@ namespace :destroy do
     puts "Destroying with deployment identifier: #{deployment_identifier}"
 
     Terraform.clean
+    Terraform.get(
+        directory: configuration_directory)
     Terraform.destroy(
         directory: configuration_directory,
         force: true,
