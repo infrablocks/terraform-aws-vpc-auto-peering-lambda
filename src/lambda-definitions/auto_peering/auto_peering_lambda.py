@@ -7,7 +7,7 @@ from auto_peering.vpc_links import VPCLinks
 logging.getLogger('boto3').setLevel(logging.WARNING)
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def peer_vpcs_for(event, context):
