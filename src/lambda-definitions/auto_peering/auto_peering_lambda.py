@@ -4,7 +4,8 @@ import json
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 from auto_peering.vpc_links import VPCLinks
 
-logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -34,14 +35,14 @@ def peer_vpcs_for(event, context):
 
     for vpc_link in vpc_links_for_target:
         logger.info(
-            "Establishing peering relationship"
+            "Establishing peering relationship "
             "between '%s' and '%s'.",
             vpc_link.vpc1.id,
             vpc_link.vpc2.id)
         vpc_link.peering_relationship.perform(action)
 
         logger.info(
-            "Creating peering routes"
+            "Creating peering routes "
             "between '%s' and '%s'.",
             vpc_link.vpc1.id,
             vpc_link.vpc2.id)
