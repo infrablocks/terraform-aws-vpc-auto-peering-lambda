@@ -9,20 +9,20 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
     def test_finds_peering_connection_between_first_and_second_vpc(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -38,7 +38,7 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
     def test_finds_peering_connection_between_second_and_first_vpc(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
@@ -68,13 +68,13 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
 
             raise Exception()
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             side_effect=conditionally_return_peering_connection)
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -90,18 +90,18 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
     def test_returns_none_when_no_peering_connection_exists(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -112,7 +112,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_requests_and_accepts_a_peering_connection(self):
         vpc1 = Mock()
         vpc2 = Mock()
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         peering_connection = Mock()
@@ -120,7 +120,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             return_value=peering_connection)
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.provision()
 
         vpc1.request_vpc_peering_connection. \
@@ -131,11 +131,11 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_logs_that_peering_connection_is_being_requested(self):
         vpc1 = Mock()
         vpc2 = Mock()
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.provision()
 
         logger.debug.assert_any_call(
@@ -145,11 +145,11 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_logs_that_peering_connection_is_being_accepted(self):
         vpc1 = Mock()
         vpc2 = Mock()
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.provision()
 
         logger.debug.assert_any_call(
@@ -159,7 +159,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_deletes_created_peering_connection_on_exception(self):
         vpc1 = Mock()
         vpc2 = Mock()
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connection = Mock()
@@ -169,7 +169,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.provision()
 
         vpc_peering_connection.delete.assert_called()
@@ -177,7 +177,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_logs_that_accepting_peering_connection_failed(self):
         vpc1 = Mock()
         vpc2 = Mock()
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connection = Mock()
@@ -187,7 +187,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.provision()
 
         logger.warn.assert_any_call(
@@ -200,20 +200,20 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_destroys_peering_connection(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.destroy()
 
         matching_vpc_peering_connection.delete.assert_called()
@@ -221,20 +221,20 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_logs_that_peering_connection_is_deleted(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.destroy()
 
         logger.debug.assert_any_call(
@@ -245,18 +245,18 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_does_not_throw_exception_when_no_peering_connection_found(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
 
         try:
             vpc_peering_relationship.destroy()
@@ -266,18 +266,18 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_logs_when_no_peering_connection_found(self):
         vpc1 = Mock(name='VPC 1')
         vpc2 = Mock(name='VPC 2')
-        ec2_client = Mock()
+        ec2 = Mock()
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_client.vpc_peering_connections = vpc_peering_connections
+        ec2.vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_client, logger)
+            vpc1, vpc2, ec2, logger)
         vpc_peering_relationship.destroy()
 
         logger.debug.assert_any_call(

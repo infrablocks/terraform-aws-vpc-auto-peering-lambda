@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 def peer_vpcs_for(event, context):
     logger.debug('Processing event: {}'.format(json.dumps(event)))
-    ec2_client = boto3.resource('ec2')
+    ec2 = boto3.resource('ec2')
 
     s3_event_sns_message = S3EventSNSMessage(event)
     target_vpc_id = s3_event_sns_message.target()
@@ -22,7 +22,7 @@ def peer_vpcs_for(event, context):
         action,
         target_vpc_id)
 
-    vpc_links = VPCLinks(ec2_client, logger)
+    vpc_links = VPCLinks(ec2, logger)
     logger.info(
         "Looking up VPC links for VPC with ID: '%s'.",
         target_vpc_id)

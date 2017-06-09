@@ -5,10 +5,10 @@ from auto_peering.vpc_link import VPCLink
 
 
 class AllVPCs(object):
-    def __init__(self, ec2_client):
+    def __init__(self, ec2):
         self.all_vpcs = [
             self.__with_metadata(vpc)
-            for vpc in ec2_client.vpcs.all()
+            for vpc in ec2.vpcs.all()
         ]
 
     @staticmethod
@@ -49,19 +49,19 @@ class AllVPCs(object):
 
 
 class VPCLinks(object):
-    def __init__(self, ec2_client, logger):
-        self.ec2_client = ec2_client
+    def __init__(self, ec2, logger):
+        self.ec2 = ec2
         self.logger = logger
 
     def __vpc_dependency_for(self, source, target):
         return VPCLink(
-            source, target, self.ec2_client, self.logger)
+            source, target, self.ec2, self.logger)
 
     def resolve_for(self, target_vpc_id):
         self.logger.debug(
             "Computing VPC links for VPC with ID: '%s'.",
             target_vpc_id)
-        all_vpcs = AllVPCs(self.ec2_client)
+        all_vpcs = AllVPCs(self.ec2)
 
         target_vpc = all_vpcs.find_by_id(target_vpc_id)
         if target_vpc:
