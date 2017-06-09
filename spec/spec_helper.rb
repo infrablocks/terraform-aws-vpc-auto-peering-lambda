@@ -10,6 +10,12 @@ require 'open-uri'
 
 require 'ruby_terraform'
 
+RubyTerraform.configure do |c|
+  c.binary = File.expand_path(
+      File.join(File.dirname(__FILE__),
+                '..', 'vendor', 'terraform', 'bin', 'terraform'))
+end
+
 RSpec.configure do |config|
   deployment_identifier = ENV['DEPLOYMENT_IDENTIFIER']
 
@@ -21,7 +27,7 @@ RSpec.configure do |config|
 
   config.add_setting :region, default: 'eu-west-2'
   config.add_setting :deployment_identifier,
-      default: deployment_identifier || SecureRandom.hex[0, 8]
+                     default: deployment_identifier || SecureRandom.hex[0, 8]
 
   config.before(:suite) do
     variables = RSpec.configuration
