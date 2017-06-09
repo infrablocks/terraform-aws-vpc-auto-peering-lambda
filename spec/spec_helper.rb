@@ -8,7 +8,7 @@ require 'securerandom'
 require 'netaddr'
 require 'open-uri'
 
-require_relative '../lib/terraform'
+require 'ruby_terraform'
 
 RSpec.configure do |config|
   deployment_identifier = ENV['DEPLOYMENT_IDENTIFIER']
@@ -25,16 +25,15 @@ RSpec.configure do |config|
 
   config.before(:suite) do
     variables = RSpec.configuration
-    configuration_directory =
-        Paths.from_project_root_directory('spec', 'infra')
+    configuration_directory = 'spec/infra'
 
     puts
     puts "Provisioning with deployment identifier: #{variables.deployment_identifier}"
     puts
 
-    Terraform.clean
-    Terraform.get(directory: configuration_directory)
-    Terraform.apply(
+    RubyTerraform.clean
+    RubyTerraform.get(directory: configuration_directory)
+    RubyTerraform.apply(
         directory: configuration_directory,
         vars: {
             region: variables.region,
@@ -47,16 +46,15 @@ RSpec.configure do |config|
   config.after(:suite) do
     unless deployment_identifier
       variables = RSpec.configuration
-      configuration_directory =
-          Paths.from_project_root_directory('spec', 'infra')
+      configuration_directory = 'spec/infra'
 
       puts
       puts "Destroying with deployment identifier: #{variables.deployment_identifier}"
       puts
 
-      Terraform.clean
-      Terraform.get(directory: configuration_directory)
-      Terraform.destroy(
+      RubyTerraform.clean
+      RubyTerraform.get(directory: configuration_directory)
+      RubyTerraform.destroy(
           directory: configuration_directory,
           force: true,
           vars: {
