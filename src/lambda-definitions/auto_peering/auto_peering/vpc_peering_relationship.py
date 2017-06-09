@@ -10,12 +10,11 @@ class VPCPeeringRelationship(object):
 
     def __peering_connection_for(self, vpc1, vpc2):
         return next(
-            self.ec2.vpc_peering_connections.filter(
-                Filters=[
-                    {'Name': 'accepter-vpc-info.vpc-id',
-                     'Values': [vpc1.id]},
-                    {'Name': 'requester-vpc-info.vpc-id',
-                     'Values': [vpc2.id]}]),
+            iter(self.ec2.vpc_peering_connections.filter(
+                Filters=[{'Name': 'accepter-vpc-info.vpc-id',
+                          'Values': [vpc1.id]},
+                         {'Name': 'requester-vpc-info.vpc-id',
+                          'Values': [vpc2.id]}])),
             None)
 
     def fetch(self):
