@@ -1,6 +1,8 @@
 Terraform AWS VPC Auto Peering
 ==============================
 
+[![CircleCI](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering.svg?style=svg)](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering)
+
 A Terraform module for automatically peering VPCs based on
 dependency information stored in tags.
 
