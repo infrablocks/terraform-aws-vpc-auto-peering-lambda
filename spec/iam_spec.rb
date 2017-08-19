@@ -1,10 +1,8 @@
 require 'spec_helper'
 
 describe 'IAM policies, profiles and roles' do
-  include_context :terraform
-
-  let(:region) {RSpec.configuration.region}
-  let(:deployment_identifier) {RSpec.configuration.deployment_identifier}
+  let(:region) { vars.region }
+  let(:deployment_identifier) { vars.deployment_identifier }
 
   context 'auto peering role' do
     subject {
@@ -55,15 +53,24 @@ describe 'IAM policies, profiles and roles' do
       policy_document_statement = policy_document["Statement"].first
       expect(policy_document_statement['Effect']).to(eq('Allow'))
       expect(policy_document_statement['Resource']).to(eq('*'))
-      expect(policy_document_statement['Action']).to(include('ec2:AcceptVpcPeeringConnection'))
-      expect(policy_document_statement['Action']).to(include('ec2:CreateVpcPeeringConnection'))
-      expect(policy_document_statement['Action']).to(include('ec2:DeleteVpcPeeringConnection'))
-      expect(policy_document_statement['Action']).to(include('ec2:DescribeVpcPeeringConnections'))
-      expect(policy_document_statement['Action']).to(include('ec2:CreateRoute'))
-      expect(policy_document_statement['Action']).to(include('ec2:DeleteRoute'))
-      expect(policy_document_statement['Action']).to(include('ec2:DescribeRouteTables'))
-      expect(policy_document_statement['Action']).to(include('ec2:DescribeTags'))
-      expect(policy_document_statement['Action']).to(include('ec2:DescribeVpcs'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:AcceptVpcPeeringConnection'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:CreateVpcPeeringConnection'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DeleteVpcPeeringConnection'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DescribeVpcPeeringConnections'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:CreateRoute'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DeleteRoute'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DescribeRouteTables'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DescribeTags'))
+      expect(policy_document_statement['Action'])
+          .to(include('ec2:DescribeVpcs'))
     end
 
     it 'allows log creation' do
@@ -72,9 +79,12 @@ describe 'IAM policies, profiles and roles' do
       policy_document_statement = policy_document["Statement"].first
       expect(policy_document_statement['Effect']).to(eq('Allow'))
       expect(policy_document_statement['Resource']).to(eq('*'))
-      expect(policy_document_statement['Action']).to(include('logs:CreateLogStream'))
-      expect(policy_document_statement['Action']).to(include('logs:CreateLogGroup'))
-      expect(policy_document_statement['Action']).to(include('logs:PutLogEvents'))
+      expect(policy_document_statement['Action'])
+          .to(include('logs:CreateLogStream'))
+      expect(policy_document_statement['Action'])
+          .to(include('logs:CreateLogGroup'))
+      expect(policy_document_statement['Action'])
+          .to(include('logs:PutLogEvents'))
     end
   end
 end

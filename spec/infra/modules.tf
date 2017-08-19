@@ -3,7 +3,7 @@ resource "aws_sns_topic" "infrastructure_events" {
 }
 
 module "vpc_auto_peering" {
-  source = "../../src"
+  source = "../../../src"
 
   region = "${var.region}"
   deployment_identifier = "${var.deployment_identifier}"

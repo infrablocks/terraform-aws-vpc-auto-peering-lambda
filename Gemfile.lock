@@ -46,9 +46,9 @@ GEM
       hamster (~> 3.0)
       minitar (~> 0.6)
       rubyzip (~> 1.1)
-    rake_terraform (0.8.0)
+    rake_terraform (0.10.0)
       rake_dependencies (~> 0.15)
-      ruby-terraform (~> 0.5)
+      ruby-terraform (~> 0.7)
     rspec (3.6.0)
       rspec-core (~> 3.6.0)
       rspec-expectations (~> 3.6.0)
@@ -65,7 +65,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.6.0)
     rspec-support (3.6.0)
-    ruby-terraform (0.5.1)
+    ruby-terraform (0.8.0)
       lino (~> 1.1)
     rubyzip (1.2.1)
     semantic (1.6.0)
@@ -88,9 +88,9 @@ DEPENDENCIES
   netaddr (~> 1.5)
   rake (~> 11.2)
   rake_dependencies (~> 0.15)
-  rake_terraform (~> 0.8)
+  rake_terraform (~> 0.10.0)
   rspec (~> 3.0)
   semantic (~> 1.6)
 
 BUNDLED WITH
-   1.15.1
+   1.15.3
