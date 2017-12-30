@@ -1,6 +1,6 @@
 data "archive_file" "auto_peering_lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda-definitions/auto_peering"
+  source_dir  = "${path.module}/lambdas/auto_peering"
   output_path = "${path.cwd}/build/auto_peering.zip"
 }
 
