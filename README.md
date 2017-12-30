@@ -13,17 +13,24 @@ To use the module, include something like the following in your terraform config
 
 ```hcl-terraform
 module "vpc-auto-peering" {
-  ...
+  source = "infrablocks/vpc-auto-peering/aws"
+  version = "0.1.12"
+  
+  region = "eu-west-2"
+  deployment_identifier = "1bc5defe"
+
+  infrastructure_events_topic_arn = "arn:aws:sns:eu-west-2:579878096224:infrastructure-events-topic-eu-west-2-335e1e54"
 }
 ```
-
-Executing `terraform get` will fetch the module.
 
 
 ### Inputs
 
-| Name                        | Description                                       | Default | Required |
-|-----------------------------|---------------------------------------------------|:-------:|:--------:|
+| Name                            | Description                                                         | Default | Required |
+|---------------------------------|---------------------------------------------------------------------|:-------:|:--------:|
+| region                          | The region into which the VPC auto peering lambda is being deployed | -       | yes      |
+| deployment_identifier           | An identifier for this instantiation                                | -       | yes      |
+| infrastructure_events_topic_arn | The ARN of the SNS topic containing VPC events                      | -       | yes      |
 
 
 ### Outputs
@@ -94,17 +101,30 @@ execute:
 ./go
 ```
 
+To provision the module prerequisites:
+
+```bash
+./go deployment:prerequisites:provision[<deployment_identifier>]
+```
+
 To provision the module contents:
 
 ```bash
-./go provision:aws[<deployment_identifier>]
+./go deployment:harness:provision[<deployment_identifier>]
 ```
 
 To destroy the module contents:
 
 ```bash
-./go destroy:aws[<deployment_identifier>]
+./go deployment:harness:destroy[<deployment_identifier>]
 ```
+
+To destroy the module prerequisites:
+
+```bash
+./go deployment:prerequisites:destroy[<deployment_identifier>]
+```
+
 
 ### Common Tasks
 
