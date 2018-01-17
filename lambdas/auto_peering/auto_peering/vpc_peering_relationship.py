@@ -40,21 +40,23 @@ class VPCPeeringRelationship(object):
         self.logger.debug(
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1_id, vpc2_id)
-        vpc_peering_connection = self.vpc1. \
-            request_vpc_peering_connection(PeerVpcId=vpc2_id,
-                                           PeerRegion=vpc2_region)
+        requester_vpc_peering_connection = self.\
+            vpc1.request_vpc_peering_connection(PeerVpcId=vpc2_id,
+                                                PeerRegion=vpc2_region)
 
         try:
             self.logger.debug(
                 "Accepting peering connection between: '%s' and: '%s'.",
                 vpc1_id, vpc2_id)
-            vpc_peering_connection.accept()
+            acceptor_vpc_peering_connection = \
+                self.__peering_connection_for(self.vpc2, self.vpc1)
+            acceptor_vpc_peering_connection.accept()
         except ClientError as error:
             self.logger.warn(
                 "Could not accept peering connection. This may be because one "
                 "already exists between '%s' and: '%s'. Error was: %s.",
                 vpc1_id, vpc2_id, error)
-            vpc_peering_connection.delete()
+            requester_vpc_peering_connection.delete()
 
     def destroy(self):
         vpc_peering_connection = self.fetch()
