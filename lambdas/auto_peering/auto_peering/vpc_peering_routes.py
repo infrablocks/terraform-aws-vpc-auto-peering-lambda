@@ -11,7 +11,9 @@ class VPCPeeringRoutes(object):
         self.logger = logger
 
     def __private_route_tables_for(self, vpc):
-        return next(iter(self.ec2_resources.values())).route_tables.filter(
+        ec2_resource = self.ec2_resources.get(vpc.region)
+
+        return ec2_resource.route_tables.filter(
             Filters=[
                 {'Name': 'vpc-id', 'Values': [vpc.id]},
                 {'Name': 'tag:Tier', 'Values': ['private']}])
@@ -43,10 +45,11 @@ class VPCPeeringRoutes(object):
             self.__private_route_tables_for(source_vpc),
             destination_vpc, vpc_peering_connection)
 
-    def __delete_routes_in(self, route_tables, destination_vpc):
+    def __delete_routes_in(self, route_tables, source_vpc, destination_vpc):
         for route_table in route_tables:
             try:
-                route = next(iter(self.ec2_resources.values())).Route(
+                ec2_resource = self.ec2_resources.get(source_vpc.region)
+                route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
                 self.logger.debug(
@@ -58,8 +61,8 @@ class VPCPeeringRoutes(object):
                     "deleted. Continuing.",
                     route_table.id)
 
-    def __deletes_routes_for(self, source_vpc, destination_vpc,
-                             vpc_peering_connection):
+    def __delete_routes_for(self, source_vpc, destination_vpc,
+                            vpc_peering_connection):
         self.logger.debug(
             "Removing routes from private subnets in: '%s' pointing at "
             "'%s:%s:%s'.",
@@ -68,6 +71,7 @@ class VPCPeeringRoutes(object):
 
         self.__delete_routes_in(
             self.__private_route_tables_for(source_vpc),
+            source_vpc,
             destination_vpc)
 
     def provision(self):
@@ -79,8 +83,8 @@ class VPCPeeringRoutes(object):
     def destroy(self):
         vpc_peering_connection = self.vpc_peering_relationship.fetch()
 
-        self.__deletes_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
-        self.__deletes_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
+        self.__delete_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
+        self.__delete_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
 
     def perform(self, action):
         getattr(self, action)()

@@ -9,8 +9,10 @@ class VPCPeeringRelationship(object):
         self.logger = logger
 
     def __peering_connection_for(self, vpc1, vpc2):
+        ec2_resource = self.ec2_resources.get(vpc1.region)
+
         return next(
-            iter(next(iter(self.ec2_resources.values())).vpc_peering_connections.filter(
+            iter(ec2_resource.vpc_peering_connections.filter(
                 Filters=[{'Name': 'accepter-vpc-info.vpc-id',
                           'Values': [vpc1.id]},
                          {'Name': 'requester-vpc-info.vpc-id',

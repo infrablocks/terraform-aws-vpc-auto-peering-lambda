@@ -1,8 +1,11 @@
 import boto3
 import logging
 import json
+import os
+
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 from auto_peering.vpc_links import VPCLinks
+from auto_peering.utils import split_and_strip
 
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
@@ -11,9 +14,18 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+# Pull out and test AllVPCs
+
 def peer_vpcs_for(event, context):
     logger.debug('Processing event: {}'.format(json.dumps(event)))
-    ec2 = boto3.resource('ec2')
+
+    default_region = os.environ.get('AWS_REGION')
+    search_regions = split_and_strip(
+        os.environ.get('AWS_SEARCH_REGIONS', default_region))
+
+    ec2_resources = (
+        boto3.resource('ec2', region_name=region)
+        for region in search_regions)
 
     s3_event_sns_message = S3EventSNSMessage(event)
     target_vpc_id = s3_event_sns_message.target()
@@ -23,7 +35,7 @@ def peer_vpcs_for(event, context):
         action,
         target_vpc_id)
 
-    vpc_links = VPCLinks(ec2, logger)
+    vpc_links = VPCLinks(ec2_resources, logger)
     logger.info(
         "Looking up VPC links for VPC with ID: '%s'.",
         target_vpc_id)

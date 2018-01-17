@@ -15,37 +15,93 @@ def tags_for(component, deployment_identifier, dependencies):
 
 class TestVPCLinks(unittest.TestCase):
     def test_resolve_dependencies_for_target_vpc(self):
-        target_vpc_id = "vpc-12345678"
+        target_vpc_id = 'vpc-12345678'
 
-        target_vpc = Mock(name="Target VPC")
+        target_vpc = Mock(name='Target VPC')
         target_vpc.id = target_vpc_id
         target_vpc.tags = tags_for(
             'thing1', 'gold', ['thing2-silver', 'thing3-bronze'])
 
-        dependency_vpc1 = Mock(name="Dependency VPC 1")
+        dependency_vpc1 = Mock(name='Dependency VPC 1')
         dependency_vpc1.tags = tags_for('thing2', 'silver', [])
-        dependency_vpc2 = Mock(name="Dependency VPC 2")
+        dependency_vpc2 = Mock(name='Dependency VPC 2')
         dependency_vpc2.tags = tags_for('thing3', 'bronze', [])
 
-        dependent_vpc = Mock(name="Dependent VPC")
+        dependent_vpc = Mock(name='Dependent VPC')
         dependent_vpc.tags = tags_for('thing4', 'lead', ['thing1-gold'])
 
-        other_vpc = Mock(name="Other VPC")
+        other_vpc = Mock(name='Other VPC')
         other_vpc.tags = tags_for('other-thing', 'copper', [])
 
         region = 'eu-west-1'
-        ec2_resource = Mock(name="EC2 resource")
+        ec2_resource = Mock(name='EC2 resource')
         ec2_resources = {region: ec2_resource}
-        logger = Mock(name="Logger")
+        logger = Mock(name='Logger')
 
         ec2_resource.vpcs.all = Mock(
-            name="All VPCs",
+            name='All VPCs',
             return_value=iter(
                 [dependency_vpc1,
                  target_vpc,
                  dependent_vpc,
                  other_vpc,
                  dependency_vpc2]))
+
+        vpc_links = VPCLinks(ec2_resources, logger)
+        resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)
+
+        self.assertEqual(
+            resolved_vpc_links,
+            {VPCLink(target_vpc, dependency_vpc1,
+                     ec2_resources, logger),
+             VPCLink(target_vpc, dependency_vpc2,
+                     ec2_resources, logger),
+             VPCLink(dependent_vpc, target_vpc,
+                     ec2_resources, logger)})
+
+    def test_resolves_using_multiple_ec2_resources(self):
+        target_vpc_id = 'vpc-12345678'
+
+        target_vpc = Mock(name='Target VPC')
+        target_vpc.id = target_vpc_id
+        target_vpc.tags = tags_for(
+            'thing1', 'gold', ['thing2-silver', 'thing3-bronze'])
+
+        dependency_vpc1 = Mock(name='Dependency VPC 1')
+        dependency_vpc1.tags = tags_for('thing2', 'silver', [])
+        dependency_vpc2 = Mock(name='Dependency VPC 2')
+        dependency_vpc2.tags = tags_for('thing3', 'bronze', [])
+
+        dependent_vpc = Mock(name='Dependent VPC')
+        dependent_vpc.tags = tags_for('thing4', 'lead', ['thing1-gold'])
+
+        other_vpc = Mock(name='Other VPC')
+        other_vpc.tags = tags_for('other-thing', 'copper', [])
+
+        region_1 = 'eu-west-1'
+        ec2_resource_1 = Mock(name='EC2 resource')
+        region_2 = 'us-east-1'
+        ec2_resource_2 = Mock(name='EC2 resource')
+
+        ec2_resources = {
+            region_1: ec2_resource_1,
+            region_2: ec2_resource_2
+        }
+
+        logger = Mock(name='Logger')
+
+        ec2_resource_1.vpcs.all = Mock(
+            name='All VPCs in {}'.format(region_1),
+            return_value=iter(
+                [dependency_vpc1,
+                 target_vpc,
+                 dependent_vpc]))
+
+        ec2_resource_2.vpcs.all = Mock(
+            name='All VPCs in {}'.format(region_2),
+            return_value=iter(
+                [dependency_vpc2,
+                 other_vpc]))
 
         vpc_links = VPCLinks(ec2_resources, logger)
         resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)

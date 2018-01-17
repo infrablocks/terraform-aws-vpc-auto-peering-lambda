@@ -1,4 +1,5 @@
 from itertools import repeat
+from functools import reduce
 
 from auto_peering.tag_collection import TagCollection
 from auto_peering.vpc_link import VPCLink
@@ -6,13 +7,15 @@ from auto_peering.vpc_link import VPCLink
 
 class AllVPCs(object):
     def __init__(self, ec2_resources):
-        self.all_vpcs = [
-            self.__with_metadata(vpc)
-            for vpc in next(iter(ec2_resources.values())).vpcs.all()
-        ]
+        self.all_vpcs = reduce(
+            lambda x, y: x + y,
+            [[self.__with_metadata(vpc, ec2_resource)
+              for vpc in ec2_resource.vpcs.all()]
+             for ec2_resource in ec2_resources.values()])
 
     @staticmethod
-    def __with_metadata(vpc):
+    def __with_metadata(vpc, ec2_resource):
+        vpc.region = ec2_resource.region_name
         vpc.component = \
             TagCollection(vpc).find_value('Component')
         vpc.deployment_identifier = \
