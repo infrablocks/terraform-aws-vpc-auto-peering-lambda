@@ -59,7 +59,7 @@ class VPCPeeringRelationship(object):
                 vpc1_id, vpc2_id)
             waiter = ec2_client.get_waiter('vpc_peering_connection_exists')
             waiter.wait(
-                VPCPeeringConnectionIds=[vpc_peering_connection_id],
+                VpcPeeringConnectionIds=[vpc_peering_connection_id],
                 WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
 
             self.logger.debug(
