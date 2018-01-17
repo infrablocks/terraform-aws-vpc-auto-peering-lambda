@@ -13,3 +13,5 @@ IMPROVEMENTS:
 * The lambda can be configured with an AWS_SEARCH_REGIONS environment variable
   that allows for cross-region peering. Only the regions listed, as a comma
   separated string, will be searched during auto peering.
+* The lambda now has a reserved concurrent execution of 1 to prevent parallel
+  invocations.
