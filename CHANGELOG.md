@@ -1,3 +1,9 @@
+## 0.1.15 (January 17th, 2018)
+
+BUGFIXES:
+
+* Fix construction of EC2 resource by region map.
+
 ## 0.1.14 (January 17th, 2018)
 
 IMPROVEMENTS:

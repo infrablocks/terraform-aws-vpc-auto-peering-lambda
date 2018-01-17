@@ -3,6 +3,8 @@ import logging
 import json
 import os
 
+from functools import reduce
+
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.utils import split_and_strip
@@ -23,9 +25,10 @@ def peer_vpcs_for(event, context):
     search_regions = split_and_strip(
         os.environ.get('AWS_SEARCH_REGIONS') or default_region)
 
-    ec2_resources = (
-        boto3.resource('ec2', region_name=region)
-        for region in search_regions)
+    ec2_resources = {
+        region: boto3.resource('ec2', region_name=region)
+        for region in search_regions
+    }
 
     s3_event_sns_message = S3EventSNSMessage(event)
     target_vpc_id = s3_event_sns_message.target()
