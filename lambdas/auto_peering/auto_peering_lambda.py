@@ -3,8 +3,6 @@ import logging
 import json
 import os
 
-from functools import reduce
-
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.utils import split_and_strip
@@ -16,7 +14,11 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-# Pull out and test AllVPCs
+class EC2Gateway(object):
+    def __init__(self, resource, client, region):
+        self.resource = resource
+        self.client = client
+        self.region = region
 
 def peer_vpcs_for(event, context):
     logger.debug('Processing event: {}'.format(json.dumps(event)))
@@ -25,8 +27,11 @@ def peer_vpcs_for(event, context):
     search_regions = split_and_strip(
         os.environ.get('AWS_SEARCH_REGIONS') or default_region)
 
-    ec2_resources = {
-        region: boto3.resource('ec2', region_name=region)
+    ec2_gateways = {
+        region: EC2Gateway(
+            boto3.resource('ec2', region_name=region),
+            boto3.client('ec2', region_name=region),
+            region)
         for region in search_regions
     }
 
@@ -38,7 +43,7 @@ def peer_vpcs_for(event, context):
         action,
         target_vpc_id)
 
-    vpc_links = VPCLinks(ec2_resources, logger)
+    vpc_links = VPCLinks(ec2_gateways, logger)
     logger.info(
         "Looking up VPC links for VPC with ID: '%s'.",
         target_vpc_id)

@@ -6,12 +6,12 @@ from auto_peering.vpc_link import VPCLink
 
 
 class AllVPCs(object):
-    def __init__(self, ec2_resources):
+    def __init__(self, ec2_gateways):
         self.all_vpcs = reduce(
             lambda x, y: x + y,
             [[self.__with_metadata(vpc, region)
-              for vpc in ec2_resource.vpcs.all()]
-             for region, ec2_resource in ec2_resources.items()])
+              for vpc in ec2_gateway.resource.vpcs.all()]
+             for region, ec2_gateway in ec2_gateways.items()])
 
     @staticmethod
     def __with_metadata(vpc, region):
@@ -58,19 +58,19 @@ class AllVPCs(object):
 
 
 class VPCLinks(object):
-    def __init__(self, ec2_resources, logger):
-        self.ec2_resources = ec2_resources
+    def __init__(self, ec2_gateways, logger):
+        self.ec2_gateways = ec2_gateways
         self.logger = logger
 
     def __vpc_link_for(self, source, target):
         return VPCLink(
-            source, target, self.ec2_resources, self.logger)
+            source, target, self.ec2_gateways, self.logger)
 
     def resolve_for(self, target_vpc_id):
         self.logger.debug(
             "Computing VPC links for VPC with ID: '%s'.",
             target_vpc_id)
-        all_vpcs = AllVPCs(self.ec2_resources)
+        all_vpcs = AllVPCs(self.ec2_gateways)
 
         target_vpc = all_vpcs.find_by_id(target_vpc_id)
         if target_vpc:

@@ -2,14 +2,15 @@ from botocore.exceptions import ClientError
 
 
 class VPCPeeringRelationship(object):
-    def __init__(self, vpc1, vpc2, ec2_resources, logger):
+    def __init__(self, vpc1, vpc2, ec2_gateways, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
-        self.ec2_resources = ec2_resources
+        self.ec2_gateways = ec2_gateways
         self.logger = logger
 
     def __peering_connection_for(self, vpc1, vpc2):
-        ec2_resource = self.ec2_resources.get(vpc1.region)
+        ec2_gateway = self.ec2_gateways.get(vpc1.region)
+        ec2_resource = ec2_gateway.resource
 
         return next(
             iter(ec2_resource.vpc_peering_connections.filter(
@@ -35,6 +36,7 @@ class VPCPeeringRelationship(object):
     def provision(self):
         vpc1_id = self.vpc1.id
         vpc2_id = self.vpc2.id
+
         vpc2_region = self.vpc2.region
 
         self.logger.debug(
@@ -45,20 +47,34 @@ class VPCPeeringRelationship(object):
                                                 PeerRegion=vpc2_region)
 
         try:
+            ec2_gateway = self.ec2_gateways.get(vpc2_region)
+            ec2_resource = ec2_gateway.resource
+            ec2_client = ec2_gateway.client
+
+            vpc_peering_connection_id = requester_vpc_peering_connection.id
+
+            self.logger.debug(
+                "Waiting for peering connection between: '%s' and: '%s' to "
+                "exist.",
+                vpc1_id, vpc2_id)
+            waiter = ec2_client.get_waiter('vpc_peering_connection_exists')
+            waiter.wait(
+                VPCPeeringConnectionIds=[vpc_peering_connection_id],
+                WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+
             self.logger.debug(
                 "Accepting peering connection between: '%s' and: '%s'.",
                 vpc1_id, vpc2_id)
-            ec2_resource = self.ec2_resources.get(vpc2_region)
+
             acceptor_vpc_peering_connection = next(iter(
                 ec2_resource.vpc_peering_connections.filter(
                     VpcPeeringConnectionIds=[
-                        requester_vpc_peering_connection.id
+                        vpc_peering_connection_id
                     ])), None)
             acceptor_vpc_peering_connection.accept()
         except ClientError as error:
             self.logger.warn(
-                "Could not accept peering connection. This may be because one "
-                "already exists between '%s' and: '%s'. Error was: %s.",
+                "Could not accept peering connection. Error was: %s.",
                 vpc1_id, vpc2_id, error)
             requester_vpc_peering_connection.delete()
 

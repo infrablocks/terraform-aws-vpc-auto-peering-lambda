@@ -3,14 +3,14 @@ from auto_peering.vpc_peering_routes import VPCPeeringRoutes
 
 
 class VPCLink(object):
-    def __init__(self, vpc1, vpc2, ec2_resources, logger):
+    def __init__(self, vpc1, vpc2, ec2_gateways, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
         self.peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_resources, logger)
+            vpc1, vpc2, ec2_gateways, logger)
         self.peering_routes = VPCPeeringRoutes(
             vpc1, vpc2, self.peering_relationship,
-            ec2_resources, logger)
+            ec2_gateways, logger)
 
     def _to_dict(self):
         return {

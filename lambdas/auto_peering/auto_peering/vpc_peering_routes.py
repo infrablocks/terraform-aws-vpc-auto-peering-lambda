@@ -3,15 +3,17 @@ from botocore.exceptions import ClientError
 
 class VPCPeeringRoutes(object):
     def __init__(self, vpc1, vpc2,
-                 vpc_peering_relationship, ec2_resources, logger):
+                 vpc_peering_relationship,
+                 ec2_gateways, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
         self.vpc_peering_relationship = vpc_peering_relationship
-        self.ec2_resources = ec2_resources
+        self.ec2_gateways = ec2_gateways
         self.logger = logger
 
     def __private_route_tables_for(self, vpc):
-        ec2_resource = self.ec2_resources.get(vpc.region)
+        ec2_gateway = self.ec2_gateways.get(vpc.region)
+        ec2_resource = ec2_gateway.resource
 
         return ec2_resource.route_tables.filter(
             Filters=[
@@ -30,8 +32,7 @@ class VPCPeeringRoutes(object):
                     route_table.id)
             except ClientError as error:
                 self.logger.warn(
-                    "Route creation failed for '%s'. It may already exist. "
-                    "Error was: %s",
+                    "Route creation failed for '%s'. Error was: %s",
                     route_table.id, error)
 
     def __create_routes_for(self, source_vpc, destination_vpc,
@@ -48,7 +49,8 @@ class VPCPeeringRoutes(object):
     def __delete_routes_in(self, route_tables, source_vpc, destination_vpc):
         for route_table in route_tables:
             try:
-                ec2_resource = self.ec2_resources.get(source_vpc.region)
+                ec2_gateway = self.ec2_gateways.get(source_vpc.region)
+                ec2_resource = ec2_gateway.resource
                 route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
@@ -57,8 +59,7 @@ class VPCPeeringRoutes(object):
                     route_table.id)
             except ClientError as error:
                 self.logger.warn(
-                    "Route deletion failed for '%s'. It may have already been "
-                    "deleted. Error was: %s",
+                    "Route deletion failed for '%s'. Error was: %s",
                     route_table.id, error)
 
     def __delete_routes_for(self, source_vpc, destination_vpc,
