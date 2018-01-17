@@ -1,4 +1,10 @@
-## 0.1.18 (January 17th, 2018)
+## 0.1.20 (January 17th, 2018)
+
+BUGFIXES:
+
+* Accept peering connection from acceptor end.
+
+## 0.1.19 (January 17th, 2018)
 
 BUGFIXES:
 

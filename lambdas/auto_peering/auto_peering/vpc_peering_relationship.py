@@ -40,7 +40,7 @@ class VPCPeeringRelationship(object):
         self.logger.debug(
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1_id, vpc2_id)
-        requester_vpc_peering_connection = self.\
+        requester_vpc_peering_connection = self. \
             vpc1.request_vpc_peering_connection(PeerVpcId=vpc2_id,
                                                 PeerRegion=vpc2_region)
 
@@ -48,8 +48,12 @@ class VPCPeeringRelationship(object):
             self.logger.debug(
                 "Accepting peering connection between: '%s' and: '%s'.",
                 vpc1_id, vpc2_id)
-            acceptor_vpc_peering_connection = \
-                self.__peering_connection_for(self.vpc2, self.vpc1)
+            ec2_resource = self.ec2_resources.get(vpc2_region)
+            acceptor_vpc_peering_connection = next(iter(
+                ec2_resource.vpc_peering_connections.filter(
+                    VpcPeeringConnectionIds=[
+                        requester_vpc_peering_connection.id
+                    ])), None)
             acceptor_vpc_peering_connection.accept()
         except ClientError as error:
             self.logger.warn(
