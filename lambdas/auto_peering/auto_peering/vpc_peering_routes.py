@@ -28,11 +28,11 @@ class VPCPeeringRoutes(object):
                 self.logger.debug(
                     "Route creation succeeded for '%s'. Continuing.",
                     route_table.id)
-            except ClientError:
+            except ClientError as error:
                 self.logger.warn(
                     "Route creation failed for '%s'. It may already exist. "
-                    "Continuing.",
-                    route_table.id)
+                    "Error was: %s",
+                    route_table.id, error)
 
     def __create_routes_for(self, source_vpc, destination_vpc,
                             vpc_peering_connection):
@@ -55,11 +55,11 @@ class VPCPeeringRoutes(object):
                 self.logger.debug(
                     "Route deletion succeeded for '%s'. Continuing.",
                     route_table.id)
-            except ClientError:
+            except ClientError as error:
                 self.logger.warn(
                     "Route deletion failed for '%s'. It may have already been "
-                    "deleted. Continuing.",
-                    route_table.id)
+                    "deleted. Error was: %s",
+                    route_table.id, error)
 
     def __delete_routes_for(self, source_vpc, destination_vpc,
                             vpc_peering_connection):

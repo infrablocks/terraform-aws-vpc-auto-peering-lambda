@@ -1,3 +1,9 @@
+## 0.1.17 (January 17th, 2018)
+
+IMPROVEMENTS:
+
+* Log errors in lambda.
+
 ## 0.1.16 (January 17th, 2018)
 
 BUGFIXES:

@@ -47,11 +47,11 @@ class VPCPeeringRelationship(object):
                 "Accepting peering connection between: '%s' and: '%s'.",
                 vpc1_id, vpc2_id)
             vpc_peering_connection.accept()
-        except ClientError:
+        except ClientError as error:
             self.logger.warn(
                 "Could not accept peering connection. This may be because one "
-                "already exists between '%s' and: '%s'. Continuing.",
-                vpc1_id, vpc2_id)
+                "already exists between '%s' and: '%s'. Error was: %s.",
+                vpc1_id, vpc2_id, error)
             vpc_peering_connection.delete()
 
     def destroy(self):
