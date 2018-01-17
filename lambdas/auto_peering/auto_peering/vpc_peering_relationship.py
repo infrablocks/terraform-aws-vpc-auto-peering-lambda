@@ -35,12 +35,14 @@ class VPCPeeringRelationship(object):
     def provision(self):
         vpc1_id = self.vpc1.id
         vpc2_id = self.vpc2.id
+        vpc2_region = self.vpc2.region
 
         self.logger.debug(
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1_id, vpc2_id)
         vpc_peering_connection = self.vpc1. \
-            request_vpc_peering_connection(PeerVpcId=vpc2_id)
+            request_vpc_peering_connection(PeerVpcId=vpc2_id,
+                                           PeerRegion=vpc2_region)
 
         try:
             self.logger.debug(

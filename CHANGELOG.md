@@ -1,3 +1,9 @@
+## 0.1.18 (January 17th, 2018)
+
+BUGFIXES:
+
+* Correctly request peering connection in multi region case.
+
 ## 0.1.17 (January 17th, 2018)
 
 IMPROVEMENTS:

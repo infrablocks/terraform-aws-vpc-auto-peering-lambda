@@ -161,7 +161,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         vpc_peering_relationship.provision()
 
         vpc1.request_vpc_peering_connection. \
-            assert_called_with(PeerVpcId=vpc2.id)
+            assert_called_with(PeerVpcId=vpc2.id, PeerRegion=region)
         peering_connection.accept. \
             assert_called()
 
