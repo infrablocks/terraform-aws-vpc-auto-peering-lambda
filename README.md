@@ -31,6 +31,7 @@ module "vpc-auto-peering" {
 | region                          | The region into which the VPC auto peering lambda is being deployed | -       | yes      |
 | deployment_identifier           | An identifier for this instantiation                                | -       | yes      |
 | infrastructure_events_topic_arn | The ARN of the SNS topic containing VPC events                      | -       | yes      |
+| search_regions                  | AWS regions to search for dependency and dependent VPCs.            | -       | no       |
 
 
 ### Outputs

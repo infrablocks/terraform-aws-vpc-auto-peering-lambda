@@ -13,4 +13,10 @@ resource "aws_lambda_function" "auto_peering" {
   timeout = 300
   source_code_hash = "${data.archive_file.auto_peering_lambda_zip.output_base64sha256}"
   reserved_concurrent_executions = 1
+
+  environment {
+    variables {
+      AWS_SEARCH_REGIONS = "${var.search_regions}"
+    }
+  }
 }

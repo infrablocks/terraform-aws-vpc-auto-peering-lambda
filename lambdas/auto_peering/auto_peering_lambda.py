@@ -21,7 +21,7 @@ def peer_vpcs_for(event, context):
 
     default_region = os.environ.get('AWS_REGION')
     search_regions = split_and_strip(
-        os.environ.get('AWS_SEARCH_REGIONS', default_region))
+        os.environ.get('AWS_SEARCH_REGIONS') or default_region)
 
     ec2_resources = (
         boto3.resource('ec2', region_name=region)

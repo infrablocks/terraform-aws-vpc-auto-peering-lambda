@@ -8,3 +8,8 @@ variable "deployment_identifier" {
 variable "infrastructure_events_topic_arn" {
   description = "The ARN of the SNS topic containing VPC events."
 }
+
+variable "search_regions" {
+  description = "AWS regions to search for dependency and dependent VPCs."
+  default = ""
+}

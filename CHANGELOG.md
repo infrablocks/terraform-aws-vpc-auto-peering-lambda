@@ -1,4 +1,10 @@
-## 0.1.13 (January 17th, 2017)
+## 0.1.14 (January 17th, 2018)
+
+IMPROVEMENTS:
+
+* Add `search_regions` optional var to allow VPC search regions to be specified.
+
+## 0.1.13 (January 17th, 2018)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
 
