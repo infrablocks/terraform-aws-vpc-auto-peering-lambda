@@ -5,9 +5,10 @@ from auto_peering.vpc_links import VPCLinks
 from auto_peering.vpc_link import VPCLink
 
 
-def tags_for(component, dependencies):
+def tags_for(component, deployment_identifier, dependencies):
     return [
         {'Key': 'Component', 'Value': component},
+        {'Key': 'DeploymentIdentifier', 'Value': deployment_identifier},
         {'Key': 'Dependencies', 'Value': ','.join(dependencies)}
     ]
 
@@ -18,18 +19,19 @@ class TestVPCLinks(unittest.TestCase):
 
         target_vpc = Mock(name="Target VPC")
         target_vpc.id = target_vpc_id
-        target_vpc.tags = tags_for('thing1', ['thing2', 'thing3'])
+        target_vpc.tags = tags_for(
+            'thing1', 'gold', ['thing2-silver', 'thing3-bronze'])
 
         dependency_vpc1 = Mock(name="Dependency VPC 1")
-        dependency_vpc1.tags = tags_for('thing2', [])
+        dependency_vpc1.tags = tags_for('thing2', 'silver', [])
         dependency_vpc2 = Mock(name="Dependency VPC 2")
-        dependency_vpc2.tags = tags_for('thing3', [])
+        dependency_vpc2.tags = tags_for('thing3', 'bronze', [])
 
         dependent_vpc = Mock(name="Dependent VPC")
-        dependent_vpc.tags = tags_for('thing4', ['thing1'])
+        dependent_vpc.tags = tags_for('thing4', 'lead', ['thing1-gold'])
 
         other_vpc = Mock(name="Other VPC")
-        other_vpc.tags = tags_for('other-thing', [])
+        other_vpc.tags = tags_for('other-thing', 'copper', [])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -60,10 +62,10 @@ class TestVPCLinks(unittest.TestCase):
 
         vpc1 = Mock(name="VPC 1")
         vpc1.id = vpc1_id
-        vpc1.tags = tags_for('thing1', ['thing2'])
+        vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
         vpc2 = Mock(name="VPC 2")
-        vpc2.tags = tags_for('thing2', ['thing1'])
+        vpc2.tags = tags_for('thing2', 'silver', ['thing1-gold'])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -88,10 +90,10 @@ class TestVPCLinks(unittest.TestCase):
 
         vpc1 = Mock(name="VPC 1")
         vpc1.id = vpc1_id
-        vpc1.tags = tags_for('thing1', ['thing2'])
+        vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
         vpc2 = Mock(name="VPC 2")
-        vpc2.tags = tags_for('thing2', [])
+        vpc2.tags = tags_for('thing2', 'silver', [])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -108,16 +110,16 @@ class TestVPCLinks(unittest.TestCase):
         logger.debug.assert_any_call(
             "Computing VPC links for VPC with ID: '%s'.", vpc1.id)
         logger.debug.assert_any_call(
-            "Found target VPC with ID: '%s', component: '%s' "
-            "and dependencies: '%s'.",
-            vpc1.id, 'thing1', ['thing2'])
+            "Found target VPC with ID: '%s', component: '%s', "
+            "deployment identifier: '%s' and dependencies: '%s'.",
+            vpc1.id, 'thing1', 'gold', ['thing2-silver'])
 
     def test_logs_not_found_target_vpc(self):
         vpc1_id = "vpc-12345678"
 
         vpc1 = Mock(name="VPC 1")
         vpc1.id = vpc1_id
-        vpc1.tags = tags_for('thing1', ['thing2'])
+        vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -137,7 +139,7 @@ class TestVPCLinks(unittest.TestCase):
 
         vpc1 = Mock(name="VPC 1")
         vpc1.id = vpc1_id
-        vpc1.tags = tags_for('thing1', ['thing2'])
+        vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -156,10 +158,11 @@ class TestVPCLinks(unittest.TestCase):
 
         vpc1 = Mock(name="VPC 1")
         vpc1.id = vpc1_id
-        vpc1.tags = tags_for('thing1', ['thing2', 'thing3'])
+        vpc1.tags = tags_for(
+            'thing1', 'gold', ['thing2-silver', 'thing3-bronze'])
 
         vpc2 = Mock(name="VPC 2")
-        vpc2.tags = tags_for('thing2', [])
+        vpc2.tags = tags_for('thing2', 'silver', [])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -183,15 +186,16 @@ class TestVPCLinks(unittest.TestCase):
 
         target_vpc = Mock(name="Target VPC")
         target_vpc.id = target_vpc_id
-        target_vpc.tags = tags_for('thing1', ['thing2', 'thing3'])
+        target_vpc.tags = tags_for(
+            'thing1', 'gold', ['thing2-silver', 'thing3-bronze'])
 
         dependency_vpc1 = Mock(name="Dependency VPC 1")
         dependency_vpc1.id = "vpc-d1a1a1a1"
-        dependency_vpc1.tags = tags_for('thing2', [])
+        dependency_vpc1.tags = tags_for('thing2', 'silver', [])
 
         dependency_vpc2 = Mock(name="Dependency VPC 2")
         dependency_vpc2.id = "vpc-d2a2a2a2"
-        dependency_vpc2.tags = tags_for('thing3', [])
+        dependency_vpc2.tags = tags_for('thing3', 'bronze', [])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -208,22 +212,22 @@ class TestVPCLinks(unittest.TestCase):
 
         logger.debug.assert_any_call(
             "Found dependency VPCs: [%s]",
-            "'thing2':'vpc-d1a1a1a1', 'thing3':'vpc-d2a2a2a2'")
+            "'thing2-silver':'vpc-d1a1a1a1', 'thing3-bronze':'vpc-d2a2a2a2'")
 
     def test_logs_dependent_vpcs(self):
         target_vpc_id = "vpc-12345678"
 
         target_vpc = Mock(name="Target VPC")
         target_vpc.id = target_vpc_id
-        target_vpc.tags = tags_for('thing1', [])
+        target_vpc.tags = tags_for('thing1', 'gold', [])
 
         dependent_vpc1 = Mock(name="Dependent VPC 1")
         dependent_vpc1.id = "vpc-d1a1a1a1"
-        dependent_vpc1.tags = tags_for('thing2', ['thing1'])
+        dependent_vpc1.tags = tags_for('thing2', 'silver', ['thing1-gold'])
 
         dependent_vpc2 = Mock(name="Dependent VPC 2")
         dependent_vpc2.id = "vpc-d2a2a2a2"
-        dependent_vpc2.tags = tags_for('thing3', ['thing1'])
+        dependent_vpc2.tags = tags_for('thing3', 'bronze', ['thing1-gold'])
 
         ec2 = Mock(name="EC2 client")
         logger = Mock(name="Logger")
@@ -240,4 +244,4 @@ class TestVPCLinks(unittest.TestCase):
 
         logger.debug.assert_any_call(
             "Found dependent VPCs: [%s]",
-            "'thing2':'vpc-d1a1a1a1', 'thing3':'vpc-d2a2a2a2'")
+            "'thing2-silver':'vpc-d1a1a1a1', 'thing3-bronze':'vpc-d2a2a2a2'")

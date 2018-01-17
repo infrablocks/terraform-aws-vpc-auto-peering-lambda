@@ -13,8 +13,14 @@ class AllVPCs(object):
 
     @staticmethod
     def __with_metadata(vpc):
-        vpc.component = TagCollection(vpc).find_value('Component')
-        vpc.dependencies = TagCollection(vpc).find_values('Dependencies')
+        vpc.component = \
+            TagCollection(vpc).find_value('Component')
+        vpc.deployment_identifier = \
+            TagCollection(vpc).find_value('DeploymentIdentifier')
+        vpc.dependencies = \
+            TagCollection(vpc).find_values('Dependencies')
+        vpc.identifier = \
+            "{}-{}".format(vpc.component, vpc.deployment_identifier)
         return vpc
 
     def find_by_id(self, vpc_id):
@@ -24,19 +30,19 @@ class AllVPCs(object):
              if vpc.id == vpc_id),
             None)
 
-    def find_for_component(self, component):
+    def find_for_identifier(self, identifier):
         return next(
             (vpc
              for vpc in self.all_vpcs
-             if vpc.component == component),
+             if vpc.identifier == identifier),
             None)
 
     def find_dependencies_of(self, vpc):
         return [
             dependency_vpc
             for dependency_vpc
-            in (self.find_for_component(component)
-                for component in vpc.dependencies)
+            in (self.find_for_identifier(identifier)
+                for identifier in vpc.dependencies)
             if dependency_vpc is not None
         ]
 
@@ -44,7 +50,7 @@ class AllVPCs(object):
         return [
             dependent_vpc
             for dependent_vpc in self.all_vpcs
-            if vpc.component in dependent_vpc.dependencies
+            if vpc.identifier in dependent_vpc.dependencies
         ]
 
 
@@ -66,10 +72,11 @@ class VPCLinks(object):
         target_vpc = all_vpcs.find_by_id(target_vpc_id)
         if target_vpc:
             self.logger.debug(
-                "Found target VPC with ID: '%s', component: '%s' "
-                "and dependencies: '%s'.",
+                "Found target VPC with ID: '%s', component: '%s', "
+                "deployment identifier: '%s' and dependencies: '%s'.",
                 target_vpc_id,
                 target_vpc.component,
+                target_vpc.deployment_identifier,
                 target_vpc.dependencies)
         else:
             self.logger.debug(
@@ -81,7 +88,7 @@ class VPCLinks(object):
             "Found dependency VPCs: [%s]",
             ', '.join([
                 "'{}':'{}'".format(
-                    dependency_vpc.component,
+                    dependency_vpc.identifier,
                     dependency_vpc.id)
                 for dependency_vpc in dependency_vpcs]))
 
@@ -90,7 +97,7 @@ class VPCLinks(object):
             "Found dependent VPCs: [%s]",
             ', '.join([
                 "'{}':'{}'".format(
-                    dependent_vpc.component,
+                    dependent_vpc.identifier,
                     dependent_vpc.id)
                 for dependent_vpc in dependent_vpcs]))
 
