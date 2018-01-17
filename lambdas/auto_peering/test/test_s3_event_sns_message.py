@@ -17,7 +17,7 @@ def sns_message_containing(s3_event):
 class TestS3EventSNSMessage(unittest.TestCase):
     def test_has_action_create_when_event_represents_create(self):
         event = sns_message_containing(
-            s3_event_for('ObjectCreated:Put', 'vpc-created/vpc-4e1ed427'))
+            s3_event_for('ObjectCreated:Put', 'vpc-existence/vpc-4e1ed427'))
 
         message = S3EventSNSMessage(event)
 

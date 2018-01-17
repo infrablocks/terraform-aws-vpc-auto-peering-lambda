@@ -33,10 +33,12 @@ class TestVPCLinks(unittest.TestCase):
         other_vpc = Mock(name="Other VPC")
         other_vpc.tags = tags_for('other-thing', 'copper', [])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [dependency_vpc1,
@@ -45,17 +47,17 @@ class TestVPCLinks(unittest.TestCase):
                  other_vpc,
                  dependency_vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)
 
         self.assertEqual(
             resolved_vpc_links,
             {VPCLink(target_vpc, dependency_vpc1,
-                     ec2, logger),
+                     ec2_resources, logger),
              VPCLink(target_vpc, dependency_vpc2,
-                     ec2, logger),
+                     ec2_resources, logger),
              VPCLink(dependent_vpc, target_vpc,
-                     ec2, logger)})
+                     ec2_resources, logger)})
 
     def test_resolves_no_duplicates(self):
         vpc1_id = "vpc-12345678"
@@ -67,23 +69,25 @@ class TestVPCLinks(unittest.TestCase):
         vpc2 = Mock(name="VPC 2")
         vpc2.tags = tags_for('thing2', 'silver', ['thing1-gold'])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         resolved_vpc_links = vpc_links. \
             resolve_for(vpc1_id)
 
         self.assertEqual(
             resolved_vpc_links,
             {VPCLink(vpc1, vpc2,
-                     ec2, logger)})
+                     ec2_resources, logger)})
 
     def test_logs_found_target_vpc(self):
         vpc1_id = "vpc-12345678"
@@ -95,16 +99,18 @@ class TestVPCLinks(unittest.TestCase):
         vpc2 = Mock(name="VPC 2")
         vpc2.tags = tags_for('thing2', 'silver', [])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
@@ -121,14 +127,16 @@ class TestVPCLinks(unittest.TestCase):
         vpc1.id = vpc1_id
         vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
@@ -141,14 +149,16 @@ class TestVPCLinks(unittest.TestCase):
         vpc1.id = vpc1_id
         vpc1.tags = tags_for('thing1', 'gold', ['thing2-silver'])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
         self.assertEqual(resolved_vpc_links, set())
@@ -164,22 +174,24 @@ class TestVPCLinks(unittest.TestCase):
         vpc2 = Mock(name="VPC 2")
         vpc2.tags = tags_for('thing2', 'silver', [])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
         self.assertEqual(len(resolved_vpc_links), 1)
         self.assertEqual(
             resolved_vpc_links,
-            {VPCLink(vpc1, vpc2, ec2, logger)})
+            {VPCLink(vpc1, vpc2, ec2_resources, logger)})
 
     def test_logs_dependency_vpcs(self):
         target_vpc_id = "vpc-12345678"
@@ -197,17 +209,19 @@ class TestVPCLinks(unittest.TestCase):
         dependency_vpc2.id = "vpc-d2a2a2a2"
         dependency_vpc2.tags = tags_for('thing3', 'bronze', [])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [dependency_vpc1,
                  target_vpc,
                  dependency_vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(
@@ -229,17 +243,19 @@ class TestVPCLinks(unittest.TestCase):
         dependent_vpc2.id = "vpc-d2a2a2a2"
         dependent_vpc2.tags = tags_for('thing3', 'bronze', ['thing1-gold'])
 
-        ec2 = Mock(name="EC2 client")
+        region = 'eu-west-1'
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_resources = {region: ec2_resource}
         logger = Mock(name="Logger")
 
-        ec2.vpcs.all = Mock(
+        ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter(
                 [dependent_vpc1,
                  target_vpc,
                  dependent_vpc2]))
 
-        vpc_links = VPCLinks(ec2, logger)
+        vpc_links = VPCLinks(ec2_resources, logger)
         vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(

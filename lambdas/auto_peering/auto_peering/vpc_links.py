@@ -5,10 +5,10 @@ from auto_peering.vpc_link import VPCLink
 
 
 class AllVPCs(object):
-    def __init__(self, ec2):
+    def __init__(self, ec2_resources):
         self.all_vpcs = [
             self.__with_metadata(vpc)
-            for vpc in ec2.vpcs.all()
+            for vpc in next(iter(ec2_resources.values())).vpcs.all()
         ]
 
     @staticmethod
@@ -55,19 +55,19 @@ class AllVPCs(object):
 
 
 class VPCLinks(object):
-    def __init__(self, ec2, logger):
-        self.ec2 = ec2
+    def __init__(self, ec2_resources, logger):
+        self.ec2_resources = ec2_resources
         self.logger = logger
 
-    def __vpc_dependency_for(self, source, target):
+    def __vpc_link_for(self, source, target):
         return VPCLink(
-            source, target, self.ec2, self.logger)
+            source, target, self.ec2_resources, self.logger)
 
     def resolve_for(self, target_vpc_id):
         self.logger.debug(
             "Computing VPC links for VPC with ID: '%s'.",
             target_vpc_id)
-        all_vpcs = AllVPCs(self.ec2)
+        all_vpcs = AllVPCs(self.ec2_resources)
 
         target_vpc = all_vpcs.find_by_id(target_vpc_id)
         if target_vpc:
@@ -104,10 +104,10 @@ class VPCLinks(object):
         vpc_pairs = list(zip(repeat(target_vpc), dependency_vpcs)) + \
                     list(zip(dependent_vpcs, repeat(target_vpc)))
 
-        vpc_dependencies = [
-            self.__vpc_dependency_for(source, target)
+        vpc_links = [
+            self.__vpc_link_for(source, target)
             for (source, target)
             in vpc_pairs
         ]
 
-        return frozenset(vpc_dependencies)
+        return frozenset(vpc_links)

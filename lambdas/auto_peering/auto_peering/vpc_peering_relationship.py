@@ -2,15 +2,15 @@ from botocore.exceptions import ClientError
 
 
 class VPCPeeringRelationship(object):
-    def __init__(self, vpc1, vpc2, ec2, logger):
+    def __init__(self, vpc1, vpc2, ec2_resources, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
-        self.ec2 = ec2
+        self.ec2_resources = ec2_resources
         self.logger = logger
 
     def __peering_connection_for(self, vpc1, vpc2):
         return next(
-            iter(self.ec2.vpc_peering_connections.filter(
+            iter(next(iter(self.ec2_resources.values())).vpc_peering_connections.filter(
                 Filters=[{'Name': 'accepter-vpc-info.vpc-id',
                           'Values': [vpc1.id]},
                          {'Name': 'requester-vpc-info.vpc-id',
@@ -71,9 +71,7 @@ class VPCPeeringRelationship(object):
 
     def _to_dict(self):
         return {
-            'vpcs': frozenset([self.vpc1, self.vpc2]),
-            'ec2': self.ec2,
-            'logger': self.logger
+            'vpcs': frozenset([self.vpc1, self.vpc2])
         }
 
     def __eq__(self, other):

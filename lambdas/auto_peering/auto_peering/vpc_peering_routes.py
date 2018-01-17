@@ -3,15 +3,15 @@ from botocore.exceptions import ClientError
 
 class VPCPeeringRoutes(object):
     def __init__(self, vpc1, vpc2,
-                 vpc_peering_relationship, ec2, logger):
+                 vpc_peering_relationship, ec2_resources, logger):
         self.vpc1 = vpc1
         self.vpc2 = vpc2
         self.vpc_peering_relationship = vpc_peering_relationship
-        self.ec2 = ec2
+        self.ec2_resources = ec2_resources
         self.logger = logger
 
     def __private_route_tables_for(self, vpc):
-        return self.ec2.route_tables.filter(
+        return next(iter(self.ec2_resources.values())).route_tables.filter(
             Filters=[
                 {'Name': 'vpc-id', 'Values': [vpc.id]},
                 {'Name': 'tag:Tier', 'Values': ['private']}])
@@ -46,7 +46,7 @@ class VPCPeeringRoutes(object):
     def __delete_routes_in(self, route_tables, destination_vpc):
         for route_table in route_tables:
             try:
-                route = self.ec2.Route(
+                route = next(iter(self.ec2_resources.values())).Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
                 self.logger.debug(
@@ -89,8 +89,6 @@ class VPCPeeringRoutes(object):
         return {
             'vpcs': frozenset([self.vpc1, self.vpc2]),
             'vpc_peering_relationship': self.vpc_peering_relationship,
-            'ec2': self.ec2,
-            'logger': self.logger
         }
 
     def __eq__(self, other):

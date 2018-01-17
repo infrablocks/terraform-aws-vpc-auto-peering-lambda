@@ -1,12 +1,8 @@
+from auto_peering.utils import split_and_strip
+
 class TagCollection(object):
     def __init__(self, tagged):
         self.tags = tagged.tags
-
-    def __split_and_strip(self, comma_separated_tag_value):
-        return list(filter(None,
-                      (tag_value.strip()
-                       for tag_value
-                       in comma_separated_tag_value.split(','))))
 
     def find_value(self, key, default=''):
         if self.tags is None:
@@ -18,6 +14,6 @@ class TagCollection(object):
 
     def find_values(self, key):
         comma_separated_tag_value = self.find_value(key)
-        tag_values = self.__split_and_strip(comma_separated_tag_value)
+        tag_values = split_and_strip(comma_separated_tag_value)
 
         return tag_values

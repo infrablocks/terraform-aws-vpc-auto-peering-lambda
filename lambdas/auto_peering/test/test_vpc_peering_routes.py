@@ -53,7 +53,9 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
@@ -61,8 +63,8 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
         vpc2_route_table_2 = Mock(name="VPC 2 route table 2")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1,
@@ -76,7 +78,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.provision()
         vpc1_route_table_1.create_route.assert_called_with(
@@ -90,7 +92,9 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
     def test_creates_routes_in_vpc2_for_vpc1_via_peering_connection(self):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
@@ -98,8 +102,8 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
         vpc2_route_table_2 = Mock(name="VPC 2 route table 2")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1,
@@ -113,7 +117,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.provision()
         vpc2_route_table_1.create_route.assert_called_with(
@@ -127,11 +131,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
     def test_handles_no_matching_route_tables(self):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[],
@@ -143,7 +149,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         try:
             vpc_peering_routes.provision()
@@ -155,13 +161,15 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
@@ -173,7 +181,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.provision()
 
@@ -185,13 +193,15 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
@@ -203,7 +213,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.provision()
 
@@ -215,14 +225,16 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1,
@@ -239,7 +251,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.provision()
 
@@ -257,7 +269,9 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
@@ -266,15 +280,15 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
         vpc1_route_table_2_route = Mock(name="VPC 1 route table 2 route")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1,
                 vpc1_route_tables=[vpc1_route_table_1, vpc1_route_table_2],
                 vpc2=vpc2, vpc2_route_tables=[]))
 
-        ec2.Route = Mock(
+        ec2_resource.Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -288,7 +302,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.destroy()
 
@@ -299,7 +313,9 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
@@ -308,15 +324,15 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc2_route_table_1_route = Mock(name="VPC 2 route table 1 route")
         vpc2_route_table_2_route = Mock(name="VPC 2 route table 2 route")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[],
                 vpc2=vpc2,
                 vpc2_route_tables=[vpc2_route_table_1, vpc2_route_table_2]))
 
-        ec2.Route = Mock(
+        ec2_resource.Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc2_route_table_1.id, vpc1.cidr_block],
@@ -330,7 +346,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.destroy()
 
@@ -340,11 +356,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
     def test_handles_no_matching_route_tables(self):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[],
@@ -356,7 +374,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         try:
             vpc_peering_routes.destroy()
@@ -368,20 +386,22 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
                 vpc2=vpc2, vpc2_route_tables=[]))
 
-        ec2.Route = Mock(
+        ec2_resource.Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -393,7 +413,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.destroy()
 
@@ -406,20 +426,22 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
                 vpc2=vpc2, vpc2_route_tables=[]))
 
-        ec2.Route = Mock(
+        ec2_resource.Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -431,7 +453,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.destroy()
 
@@ -443,7 +465,9 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1 = Mock(name="VPC 1")
         vpc2 = Mock(name="VPC 2")
 
-        ec2 = Mock()
+        region = 'eu-west-1'
+        ec2_resource = Mock(name='EC2 resource')
+        ec2_resources = {region: ec2_resource}
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
@@ -452,14 +476,14 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
         vpc2_route_table_1_route = Mock(name="VPC 2 route table 1 route")
 
-        ec2.route_tables = Mock(name="VPC route tables")
-        ec2.route_tables.filter = Mock(
+        ec2_resource.route_tables = Mock(name="VPC route tables")
+        ec2_resource.route_tables.filter = Mock(
             name="Filtered VPC route tables",
             side_effect=mock_filter_for(
                 vpc1=vpc1, vpc1_route_tables=[vpc1_route_table_1],
                 vpc2=vpc2, vpc2_route_tables=[vpc2_route_table_1]))
 
-        ec2.Route = Mock(
+        ec2_resource.Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -476,7 +500,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
 
         vpc_peering_routes.destroy()
 
