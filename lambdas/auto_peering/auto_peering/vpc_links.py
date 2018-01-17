@@ -9,13 +9,13 @@ class AllVPCs(object):
     def __init__(self, ec2_resources):
         self.all_vpcs = reduce(
             lambda x, y: x + y,
-            [[self.__with_metadata(vpc, ec2_resource)
+            [[self.__with_metadata(vpc, region)
               for vpc in ec2_resource.vpcs.all()]
-             for ec2_resource in ec2_resources.values()])
+             for region, ec2_resource in ec2_resources.items()])
 
     @staticmethod
-    def __with_metadata(vpc, ec2_resource):
-        vpc.region = ec2_resource.region_name
+    def __with_metadata(vpc, region):
+        vpc.region = region
         vpc.component = \
             TagCollection(vpc).find_value('Component')
         vpc.deployment_identifier = \

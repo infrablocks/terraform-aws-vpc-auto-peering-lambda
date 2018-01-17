@@ -1,3 +1,9 @@
+## 0.1.16 (January 17th, 2018)
+
+BUGFIXES:
+
+* Correctly enhance VPC with region.
+
 ## 0.1.15 (January 17th, 2018)
 
 BUGFIXES:
