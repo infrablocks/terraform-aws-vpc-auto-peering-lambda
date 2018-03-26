@@ -20,7 +20,8 @@ class EC2Gateway(object):
         self.client = client
         self.region = region
 
-def peer_vpcs_for(event, context):
+
+def peer_vpcs_for(event):
     logger.debug('Processing event: {}'.format(json.dumps(event)))
 
     default_region = os.environ.get('AWS_REGION')
