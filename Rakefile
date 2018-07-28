@@ -18,7 +18,7 @@ task :default => 'test:all'
 namespace :virtualenv do
   task :create do
     mkdir_p 'vendor'
-    sh 'virtualenv vendor/virtualenv --no-site-packages'
+    sh 'python -m venv vendor/virtualenv'
   end
 
   task :destroy do
