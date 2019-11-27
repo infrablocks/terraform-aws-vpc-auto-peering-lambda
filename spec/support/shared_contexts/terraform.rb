@@ -8,7 +8,16 @@ shared_context :terraform do
 
   let(:cloudwatch_logs_client) { Aws::CloudWatchLogs::Client.new }
 
-  let(:vars) {TerraformModule.configuration.for(:harness).vars}
+  let(:vars) {
+    OpenStruct.new(
+        TerraformModule.configuration
+            .for(:harness)
+            .vars)
+  }
+
+  def configuration
+    TerraformModule.configuration
+  end
 
   def output_for(role, name)
     TerraformModule.output_for(role, name)
