@@ -3,6 +3,7 @@ import logging
 import json
 import os
 
+from auto_peering.ec2_gateway import EC2Gateway
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.utils import split_and_strip
@@ -12,13 +13,6 @@ logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-
-class EC2Gateway(object):
-    def __init__(self, resource, client, region):
-        self.resource = resource
-        self.client = client
-        self.region = region
 
 
 def peer_vpcs_for(event):

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, PropertyMock
 from botocore.exceptions import ClientError
 
+from auto_peering.ec2_gateway import EC2Gateway
 from auto_peering.vpc_peering_routes import VPCPeeringRoutes
 
 
@@ -29,10 +30,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -60,7 +64,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.provision()
         vpc1_route_table_1.create_route.assert_called_with(
@@ -81,10 +85,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -112,7 +119,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.provision()
         vpc2_route_table_1.create_route.assert_called_with(
@@ -133,10 +140,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -159,7 +169,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         try:
             vpc_peering_routes.provision()
@@ -177,10 +187,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -205,7 +218,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.provision()
 
@@ -223,10 +236,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -251,7 +267,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.provision()
 
@@ -269,10 +285,13 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -297,17 +316,19 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc_peering_relationship.fetch = Mock(
             return_value=vpc_peering_connection)
 
+        create_route_error = \
+            ClientError({'Error': {'Code': '123'}}, 'something')
         vpc1_route_table_1.create_route = Mock(
-            side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
+            side_effect=create_route_error)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.provision()
 
         logger.warn.assert_any_call(
-            "Route creation failed for '%s'. It may already exist. Continuing.",
-            vpc1_route_table_1.id)
+            "Route creation failed for '%s'. Error was: %s",
+            vpc1_route_table_1.id, create_route_error)
 
         vpc2_route_table_1.create_route.assert_called_with(
             DestinationCidrBlock=vpc1.cidr_block,
@@ -325,10 +346,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -365,7 +389,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.destroy()
 
@@ -382,10 +406,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -422,7 +449,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.destroy()
 
@@ -439,10 +466,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -465,7 +495,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         try:
             vpc_peering_routes.destroy()
@@ -483,10 +513,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -518,7 +551,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.destroy()
 
@@ -537,10 +570,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -573,7 +609,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             return_value=vpc_peering_connection)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.destroy()
 
@@ -591,10 +627,13 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         type(vpc2).region = PropertyMock(return_value=region_2)
 
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name='EC2 client')
         ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_client_2 = Mock(name='EC2 client')
+
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock()
@@ -633,17 +672,17 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc_peering_relationship.fetch = Mock(
             return_value=vpc_peering_connection)
 
+        delete_error = ClientError({'Error': {'Code': '123'}}, 'something')
         vpc1_route_table_1_route.delete = Mock(
-            side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
+            side_effect=delete_error)
 
         vpc_peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, vpc_peering_relationship, ec2_resources, logger)
+            vpc1, vpc2, vpc_peering_relationship, ec2_gateways, logger)
 
         vpc_peering_routes.destroy()
 
         logger.warn.assert_any_call(
-            "Route deletion failed for '%s'. It may have already been "
-            "deleted. Continuing.",
-            vpc1_route_table_1.id)
+            "Route deletion failed for '%s'. Error was: %s",
+            vpc1_route_table_1.id, delete_error)
 
         vpc2_route_table_1_route.delete.assert_called()

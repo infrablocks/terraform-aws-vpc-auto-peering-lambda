@@ -74,7 +74,8 @@ class VPCPeeringRelationship(object):
             acceptor_vpc_peering_connection.accept()
         except ClientError as error:
             self.logger.warn(
-                "Could not accept peering connection. Error was: %s.",
+                "Could not accept peering connection between: '%s' and: '%s'. "
+                "Error was: %s",
                 vpc1_id, vpc2_id, error)
             requester_vpc_peering_connection.delete()
 
@@ -82,13 +83,13 @@ class VPCPeeringRelationship(object):
         vpc_peering_connection = self.fetch()
         if vpc_peering_connection:
             self.logger.debug(
-                "Destroying peering connection between: '%s' and: '%s'",
+                "Destroying peering connection between: '%s' and: '%s'.",
                 vpc_peering_connection.requester_vpc.id,
                 vpc_peering_connection.accepter_vpc.id)
             vpc_peering_connection.delete()
         else:
             self.logger.debug(
-                "No peering connection to destroy between: '%s' and: '%s'",
+                "No peering connection to destroy between: '%s' and: '%s'.",
                 self.vpc1.id,
                 self.vpc2.id)
 

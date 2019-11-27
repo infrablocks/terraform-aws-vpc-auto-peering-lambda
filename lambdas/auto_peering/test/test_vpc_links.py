@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
+from auto_peering.ec2_gateway import EC2Gateway
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.vpc_link import VPCLink
 
@@ -34,9 +35,10 @@ class TestVPCLinks(unittest.TestCase):
         other_vpc.tags = tags_for('other-thing', 'copper', [])
 
         region = 'eu-west-1'
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_resources = {region: ec2_resource}
-        logger = Mock(name='Logger')
+        ec2_resource = Mock(name="EC2 resource")
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
+        logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
             name='All VPCs',
@@ -47,19 +49,19 @@ class TestVPCLinks(unittest.TestCase):
                  other_vpc,
                  dependency_vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)
 
         self.assertEqual(
             resolved_vpc_links,
             {VPCLink(target_vpc, dependency_vpc1,
-                     ec2_resources, logger),
+                     ec2_gateways, logger),
              VPCLink(target_vpc, dependency_vpc2,
-                     ec2_resources, logger),
+                     ec2_gateways, logger),
              VPCLink(dependent_vpc, target_vpc,
-                     ec2_resources, logger)})
+                     ec2_gateways, logger)})
 
-    def test_resolves_using_multiple_ec2_resources(self):
+    def test_resolves_using_multiple_ec2_gateways(self):
         target_vpc_id = 'vpc-12345678'
 
         target_vpc = Mock(name='Target VPC')
@@ -80,12 +82,14 @@ class TestVPCLinks(unittest.TestCase):
 
         region_1 = 'eu-west-1'
         ec2_resource_1 = Mock(name='EC2 resource')
+        ec2_client_1 = Mock(name="EC2 client")
         region_2 = 'us-east-1'
         ec2_resource_2 = Mock(name='EC2 resource')
+        ec2_client_2 = Mock(name="EC2 client")
 
-        ec2_resources = {
-            region_1: ec2_resource_1,
-            region_2: ec2_resource_2
+        ec2_gateways = {
+            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
+            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
         }
 
         logger = Mock(name='Logger')
@@ -103,17 +107,17 @@ class TestVPCLinks(unittest.TestCase):
                 [dependency_vpc2,
                  other_vpc]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         resolved_vpc_links = vpc_links.resolve_for(target_vpc_id)
 
         self.assertEqual(
             resolved_vpc_links,
             {VPCLink(target_vpc, dependency_vpc1,
-                     ec2_resources, logger),
+                     ec2_gateways, logger),
              VPCLink(target_vpc, dependency_vpc2,
-                     ec2_resources, logger),
+                     ec2_gateways, logger),
              VPCLink(dependent_vpc, target_vpc,
-                     ec2_resources, logger)})
+                     ec2_gateways, logger)})
 
     def test_resolves_no_duplicates(self):
         vpc1_id = "vpc-12345678"
@@ -127,7 +131,8 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
@@ -136,14 +141,14 @@ class TestVPCLinks(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         resolved_vpc_links = vpc_links. \
             resolve_for(vpc1_id)
 
         self.assertEqual(
             resolved_vpc_links,
             {VPCLink(vpc1, vpc2,
-                     ec2_resources, logger)})
+                     ec2_gateways, logger)})
 
     def test_logs_found_target_vpc(self):
         vpc1_id = "vpc-12345678"
@@ -157,7 +162,8 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
@@ -166,7 +172,7 @@ class TestVPCLinks(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
@@ -185,14 +191,15 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(vpc1_id)
 
         logger.debug.assert_any_call(
@@ -207,14 +214,15 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
             name="All VPCs",
             return_value=iter([]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
         self.assertEqual(resolved_vpc_links, set())
@@ -232,7 +240,8 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
@@ -241,13 +250,13 @@ class TestVPCLinks(unittest.TestCase):
                 [vpc1,
                  vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         resolved_vpc_links = vpc_links.resolve_for(vpc1_id)
 
         self.assertEqual(len(resolved_vpc_links), 1)
         self.assertEqual(
             resolved_vpc_links,
-            {VPCLink(vpc1, vpc2, ec2_resources, logger)})
+            {VPCLink(vpc1, vpc2, ec2_gateways, logger)})
 
     def test_logs_dependency_vpcs(self):
         target_vpc_id = "vpc-12345678"
@@ -267,7 +276,8 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
@@ -277,7 +287,7 @@ class TestVPCLinks(unittest.TestCase):
                  target_vpc,
                  dependency_vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(
@@ -301,7 +311,8 @@ class TestVPCLinks(unittest.TestCase):
 
         region = 'eu-west-1'
         ec2_resource = Mock(name="EC2 resource")
-        ec2_resources = {region: ec2_resource}
+        ec2_client = Mock(name="EC2 client")
+        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
         logger = Mock(name="Logger")
 
         ec2_resource.vpcs.all = Mock(
@@ -311,7 +322,7 @@ class TestVPCLinks(unittest.TestCase):
                  target_vpc,
                  dependent_vpc2]))
 
-        vpc_links = VPCLinks(ec2_resources, logger)
+        vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(target_vpc_id)
 
         logger.debug.assert_any_call(
