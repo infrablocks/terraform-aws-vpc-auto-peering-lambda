@@ -7,6 +7,7 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
+      - run: ./scripts/ci/common/install-pyenv.sh
       - run: ./scripts/ci/steps/test.sh
   prerelease:
     working_directory: ~/terraform-aws-vpc-auto-peering
