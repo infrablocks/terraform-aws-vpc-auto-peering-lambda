@@ -72,6 +72,8 @@ namespace :test do
   namespace :integration do
     RSpec::Core::RakeTask.new(:all => ['terraform:ensure']) do
       ENV['AWS_REGION'] = 'eu-west-2'
+      ENV['TF_PLUGIN_CACHE_DIR'] =
+          "#{Paths.project_root_directory}/vendor/terraform/plugins"
     end
   end
 
