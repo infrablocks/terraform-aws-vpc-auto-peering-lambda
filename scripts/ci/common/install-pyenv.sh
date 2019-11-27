@@ -17,4 +17,5 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 pyenv install
+pip install --upgrade pip
 pip install virtualenv
