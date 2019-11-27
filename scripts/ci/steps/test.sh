@@ -20,6 +20,8 @@ set -e
 
 git crypt unlock
 
+source config/secrets/ci/aws-credentials.sh
+
 export PATH="/root/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"

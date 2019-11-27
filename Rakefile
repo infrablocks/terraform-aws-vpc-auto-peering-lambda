@@ -83,11 +83,14 @@ namespace :deployment do
     RakeTerraform.define_command_tasks do |t|
       t.argument_names = [:deployment_identifier]
 
-      t.configuration_name = 'Preliminary infrastructure'
-      t.source_directory = configuration.for(:prerequisites).source_directory
-      t.work_directory = configuration.for(:prerequisites).work_directory
+      t.configuration_name = 'prerequisites'
+      t.source_directory =
+          configuration.for(:prerequisites).source_directory
+      t.work_directory =
+          configuration.for(:prerequisites).work_directory
 
-      t.state_file = configuration.for(:prerequisites).state_file
+      t.state_file =
+          configuration.for(:prerequisites).state_file
 
       t.vars = lambda do |args|
         configuration.for(:prerequisites, args)
