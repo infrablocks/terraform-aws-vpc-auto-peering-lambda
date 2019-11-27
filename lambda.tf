@@ -15,7 +15,7 @@ resource "aws_lambda_function" "auto_peering" {
   reserved_concurrent_executions = 1
 
   environment {
-    variables {
+    variables = {
       AWS_SEARCH_REGIONS = join(",", var.search_regions)
     }
   }
