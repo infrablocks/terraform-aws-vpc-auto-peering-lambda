@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "auto_peering_assume_role_policy" {
 
 resource "aws_iam_role" "auto_peering" {
   name = "auto-peering-role-${var.region}-${var.deployment_identifier}"
-  assume_role_policy = "${data.aws_iam_policy_document.auto_peering_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.auto_peering_assume_role_policy.json
 }
 
 data "aws_iam_policy_document" "auto_peering_role_policy" {
@@ -41,11 +41,11 @@ data "aws_iam_policy_document" "auto_peering_role_policy" {
 resource "aws_iam_policy" "auto_peering" {
   name = "auto-peering-policy-${var.region}-${var.deployment_identifier}"
   description = "auto-peering-policy-${var.region}-${var.deployment_identifier}"
-  policy = "${data.aws_iam_policy_document.auto_peering_role_policy.json}"
+  policy = data.aws_iam_policy_document.auto_peering_role_policy.json
 }
 
 resource "aws_iam_policy_attachment" "auto_peering" {
   name = "auto-peering-policy-attachment-${var.region}-${var.deployment_identifier}"
-  roles = ["${aws_iam_role.auto_peering.id}"]
-  policy_arn = "${aws_iam_policy.auto_peering.arn}"
+  roles = [aws_iam_role.auto_peering.id]
+  policy_arn = aws_iam_policy.auto_peering.arn
 }
