@@ -4,9 +4,9 @@ import json
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
 
 
-def s3_event_for(eventName, key):
+def s3_event_for(event_name, key):
     return {'Records': [
-        {'eventName': eventName, 's3': {'object': {'key': key}}}
+        {'eventName': event_name, 's3': {'object': {'key': key}}}
     ]}
 
 

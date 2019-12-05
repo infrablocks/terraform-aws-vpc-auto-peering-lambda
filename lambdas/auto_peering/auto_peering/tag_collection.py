@@ -1,5 +1,6 @@
 from auto_peering.utils import split_and_strip
 
+
 class TagCollection(object):
     def __init__(self, tagged):
         self.tags = tagged.tags
