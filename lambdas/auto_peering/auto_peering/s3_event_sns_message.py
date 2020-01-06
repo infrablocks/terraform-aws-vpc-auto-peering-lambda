@@ -32,5 +32,8 @@ class S3EventSNSMessage(object):
     def type(self):
         return self.__s3_object_key_parts()[0]
 
-    def target(self):
+    def account_id(self):
         return self.__s3_object_key_parts()[1]
+
+    def vpc_id(self):
+        return self.__s3_object_key_parts()[2]

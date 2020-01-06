@@ -31,7 +31,7 @@ def peer_vpcs_for(event, _):
     }
 
     s3_event_sns_message = S3EventSNSMessage(event)
-    target_vpc_id = s3_event_sns_message.target()
+    target_vpc_id = s3_event_sns_message.vpc_id()
     action = s3_event_sns_message.action()
     logger.info(
         "'%s'ing peering connections for '%s'.",
