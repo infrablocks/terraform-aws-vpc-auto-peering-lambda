@@ -31,6 +31,10 @@ namespace :virtualenv do
     sh 'python -m venv vendor/virtualenv'
   end
 
+  task :upgrade do
+    sh_with_virtualenv 'pip install --upgrade pip'
+  end
+
   task :destroy do
     rm_rf 'vendor/virtualenv'
   end
@@ -39,11 +43,13 @@ namespace :virtualenv do
     unless File.exists?('vendor/virtualenv')
       Rake::Task['virtualenv:create'].invoke
     end
+    Rake::Task['virtualenv:upgrade'].invoke
   end
 end
 
 namespace :dependencies do
   namespace :install do
+    desc "Install dependencies for auto peering lambda."
     task :auto_peering_lambda => ['virtualenv:ensure'] do
       puts 'Running unit tests for auto_peering lambda'
       puts
@@ -52,12 +58,14 @@ namespace :dependencies do
           'pip install -r lambdas/auto_peering/requirements.txt')
     end
 
+    desc "Install dependencies for all lambdas."
     task :all => ['dependencies:install:auto_peering_lambda']
   end
 end
 
 namespace :test do
   namespace :unit do
+    desc "Run unit tests of auto peering lambda."
     task :auto_peering_lambda => ['dependencies:install:all'] do
       puts 'Running integration tests'
       puts
@@ -66,6 +74,7 @@ namespace :test do
           'python -m unittest discover -s ./lambdas/auto_peering')
     end
 
+    desc "Run unit tests of all lambdas."
     task :all => ['test:unit:auto_peering_lambda']
   end
 
@@ -142,5 +151,5 @@ def sh_with_virtualenv command
   existing_path = ENV['PATH']
   path = "#{virtualenv_path}:#{existing_path}"
 
-  system({'PATH' => path}, command) or exit!(1)
+  system({'PATH' => path}, command) or fail
 end
