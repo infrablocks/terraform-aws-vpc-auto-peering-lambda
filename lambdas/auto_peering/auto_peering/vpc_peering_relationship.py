@@ -9,8 +9,10 @@ class VPCPeeringRelationship(object):
         self.logger = logger
 
     def __peering_connection_for(self, vpc1, vpc2):
-        ec2_gateway = self.ec2_gateways.get(vpc1.region)
-        ec2_resource = ec2_gateway.resource
+        ec2_gateway = \
+            self.ec2_gateways.by_account_id_and_region(
+                vpc1.account_id, vpc1.region)
+        ec2_resource = ec2_gateway.resource()
 
         return next(
             iter(ec2_resource.vpc_peering_connections.filter(
@@ -38,6 +40,7 @@ class VPCPeeringRelationship(object):
         vpc2_id = self.vpc2.id
 
         vpc2_region = self.vpc2.region
+        vpc2_account_id = self.vpc2.account_id
 
         self.logger.debug(
             "Requesting peering connection between: '%s' and: '%s'.",
@@ -47,9 +50,10 @@ class VPCPeeringRelationship(object):
                                                 PeerRegion=vpc2_region)
 
         try:
-            ec2_gateway = self.ec2_gateways.get(vpc2_region)
-            ec2_resource = ec2_gateway.resource
-            ec2_client = ec2_gateway.client
+            ec2_gateway = self.ec2_gateways.\
+                by_account_id_and_region(vpc2_account_id, vpc2_region)
+            ec2_resource = ec2_gateway.resource()
+            ec2_client = ec2_gateway.client()
 
             vpc_peering_connection_id = requester_vpc_peering_connection.id
 
@@ -100,6 +104,13 @@ class VPCPeeringRelationship(object):
         return {
             'vpcs': frozenset([self.vpc1, self.vpc2])
         }
+
+    def __repr__(self):
+        return "<%s.%s object at %s: %s>" % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            repr(self._to_dict()))
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

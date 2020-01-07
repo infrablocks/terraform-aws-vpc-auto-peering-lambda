@@ -6,15 +6,18 @@ from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
 from auto_peering.vpc_peering_routes import VPCPeeringRoutes
 from auto_peering.vpc_link import VPCLink
 
+from test import randoms, mocks
+
 
 class TestVPCLink(unittest.TestCase):
     def test_constructs_peering_relationship_for_vpcs(self):
-        vpc1 = Mock(name="VPC 1")
-        vpc2 = Mock(name="VPC 2")
-        region = 'eu-west-1'
-        ec2_resource = Mock(name="EC2 resource")
-        ec2_client = Mock(name="EC2 client")
-        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
+        vpc1 = mocks.build_vpc_response_mock(name="VPC 1")
+        vpc2 = mocks.build_vpc_response_mock(name="VPC 2")
+
+        account_id = randoms.account_id()
+        region = randoms.region()
+
+        ec2_gateways = mocks.EC2Gateways([mocks.EC2Gateway(account_id, region)])
         logger = Mock(name="Logger")
 
         vpc_link = VPCLink(vpc1, vpc2, ec2_gateways, logger)
@@ -24,12 +27,13 @@ class TestVPCLink(unittest.TestCase):
             VPCPeeringRelationship(vpc1, vpc2, ec2_gateways, logger))
 
     def test_constructs_peering_routes_for_peering_relationship_and_vpcs(self):
-        vpc1 = Mock(name="VPC 1")
-        vpc2 = Mock(name="VPC 2")
-        region = 'eu-west-1'
-        ec2_resource = Mock(name="EC2 resource")
-        ec2_client = Mock(name="EC2 client")
-        ec2_gateways = {region: EC2Gateway(ec2_resource, ec2_client, region)}
+        vpc1 = mocks.build_vpc_response_mock(name="VPC 1")
+        vpc2 = mocks.build_vpc_response_mock(name="VPC 2")
+
+        account_id = randoms.account_id()
+        region = randoms.region()
+
+        ec2_gateways = mocks.EC2Gateways([mocks.EC2Gateway(account_id, region)])
         logger = Mock(name="Logger")
 
         vpc_link = VPCLink(vpc1, vpc2, ec2_gateways, logger)

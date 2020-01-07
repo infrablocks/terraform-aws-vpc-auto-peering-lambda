@@ -1,30 +1,24 @@
 import unittest
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 from botocore.exceptions import ClientError
 
-from auto_peering.ec2_gateway import EC2Gateway
+from auto_peering.vpc import VPC
 from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
+from test import randoms, mocks
 
 
 class TestVPCPeeringRelationshipFetch(unittest.TestCase):
     def test_finds_peering_connection_between_first_and_second_vpc(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc_1 = Mock(name='VPC 1')
-        type(vpc_1).region = PropertyMock(return_value=region_1)
-        vpc_2 = Mock(name='VPC 2')
-        type(vpc_2).region = PropertyMock(return_value=region_2)
+        vpc_1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc_2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2),
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -35,13 +29,15 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource_1.vpc_peering_connections = vpc_peering_connections_1
+        ec2_gateway_1.resource().vpc_peering_connections = \
+            vpc_peering_connections_1
         vpc_peering_connections_1.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region_1),
             return_value=iter([matching_vpc_peering_connection]))
 
-        ec2_resource_2.vpc_peering_connections = vpc_peering_connections_2
+        ec2_gateway_2.resource().vpc_peering_connections = \
+            vpc_peering_connections_2
         vpc_peering_connections_2.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region_2),
@@ -62,23 +58,16 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
             found_peering_connection, matching_vpc_peering_connection)
 
     def test_finds_peering_connection_between_second_and_first_vpc(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc_1 = Mock(name='VPC 1')
-        type(vpc_1).region = PropertyMock(return_value=region_1)
-        vpc_2 = Mock(name='VPC 2')
-        type(vpc_2).region = PropertyMock(return_value=region_2)
+        vpc_1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc_2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2),
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -89,13 +78,13 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource_1.vpc_peering_connections = vpc_peering_connections_1
+        ec2_gateway_1.resource().vpc_peering_connections = vpc_peering_connections_1
         vpc_peering_connections_1.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region_1),
             return_value=iter([]))
 
-        ec2_resource_2.vpc_peering_connections = vpc_peering_connections_2
+        ec2_gateway_2.resource().vpc_peering_connections = vpc_peering_connections_2
         vpc_peering_connections_2.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region_2),
@@ -116,23 +105,20 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
             found_peering_connection, matching_vpc_peering_connection)
 
     def test_returns_none_when_no_peering_connection_exists(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))
@@ -147,17 +133,14 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
 
 class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_requests_and_accepts_a_peering_connection(self):
-        region = 'eu-west-1'
+        account_id = mocks.randoms.account_id()
+        region = mocks.randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -170,7 +153,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region),
@@ -186,17 +169,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             assert_called()
 
     def test_logs_that_peering_connection_is_being_requested(self):
-        region = 'eu-west-1'
+        account_id = mocks.randoms.account_id()
+        region = mocks.randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -205,7 +185,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
 
         vpc_peering_connection.id = Mock(name='VPC peering connection ID')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([vpc_peering_connection]))
@@ -219,17 +199,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             vpc1.id, vpc2.id)
 
     def test_logs_that_peering_connection_is_being_accepted(self):
-        region = 'eu-west-1'
+        account_id = mocks.randoms.account_id()
+        region = mocks.randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -238,7 +215,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
 
         vpc_peering_connection.id = Mock(name='VPC peering connection ID')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([vpc_peering_connection]))
@@ -252,17 +229,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             vpc1.id, vpc2.id)
 
     def test_deletes_created_peering_connection_on_exception(self):
-        region = 'eu-west-1'
+        region = mocks.randoms.region()
+        account_id = mocks.randoms.account_id()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -273,7 +247,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         vpc_peering_connection.delete = \
             Mock(name='Delete VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([vpc_peering_connection]))
@@ -290,17 +264,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         vpc_peering_connection.delete.assert_called()
 
     def test_logs_that_accepting_peering_connection_failed(self):
-        region = 'eu-west-1'
+        region = mocks.randoms.region()
+        account_id = mocks.randoms.account_id()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -311,7 +282,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         vpc_peering_connection.delete = \
             Mock(name='Delete VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([vpc_peering_connection]))
@@ -334,17 +305,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
 
 class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_destroys_peering_connection(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -352,7 +320,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))
@@ -364,17 +332,14 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
         matching_vpc_peering_connection.delete.assert_called()
 
     def test_logs_that_peering_connection_is_deleted(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -382,7 +347,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))
@@ -397,23 +362,20 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             matching_vpc_peering_connection.accepter_vpc.id)
 
     def test_does_not_throw_exception_when_no_peering_connection_found(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))
@@ -427,23 +389,20 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             self.fail("Expected no exception but got: {0}".format(exception))
 
     def test_logs_when_no_peering_connection_found(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
         vpc_peering_connections = Mock(name='VPC peering connections')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([]))

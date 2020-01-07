@@ -12,10 +12,10 @@ class VPCPeeringRoutes(object):
         self.logger = logger
 
     def __private_route_tables_for(self, vpc):
-        ec2_gateway = self.ec2_gateways.get(vpc.region)
-        ec2_resource = ec2_gateway.resource
+        ec2_gateway = self.ec2_gateways.\
+            by_account_id_and_region(vpc.account_id, vpc.region)
 
-        return ec2_resource.route_tables.filter(
+        return ec2_gateway.resource().route_tables.filter(
             Filters=[
                 {'Name': 'vpc-id', 'Values': [vpc.id]},
                 {'Name': 'tag:Tier', 'Values': ['private']}])
@@ -49,8 +49,10 @@ class VPCPeeringRoutes(object):
     def __delete_routes_in(self, route_tables, source_vpc, destination_vpc):
         for route_table in route_tables:
             try:
-                ec2_gateway = self.ec2_gateways.get(source_vpc.region)
-                ec2_resource = ec2_gateway.resource
+                ec2_gateway = self.ec2_gateways.\
+                    by_account_id_and_region(source_vpc.account_id,
+                                             source_vpc.region)
+                ec2_resource = ec2_gateway.resource()
                 route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
@@ -95,6 +97,13 @@ class VPCPeeringRoutes(object):
             'vpcs': frozenset([self.vpc1, self.vpc2]),
             'vpc_peering_relationship': self.vpc_peering_relationship,
         }
+
+    def __repr__(self):
+        return "<%s.%s object at %s: %s>" % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            repr(self._to_dict()))
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
