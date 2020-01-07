@@ -4,12 +4,13 @@ from botocore.exceptions import ClientError
 
 from auto_peering.ec2_gateway import EC2Gateway
 from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
+from test import randoms
 
 
 class TestVPCPeeringRelationshipFetch(unittest.TestCase):
     def test_finds_peering_connection_between_first_and_second_vpc(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
         vpc_1 = Mock(name='VPC 1')
         type(vpc_1).region = PropertyMock(return_value=region_1)

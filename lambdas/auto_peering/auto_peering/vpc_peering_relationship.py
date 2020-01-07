@@ -9,8 +9,10 @@ class VPCPeeringRelationship(object):
         self.logger = logger
 
     def __peering_connection_for(self, vpc1, vpc2):
-        ec2_gateway = self.ec2_gateways.get(vpc1.region)
-        ec2_resource = ec2_gateway.resource
+        ec2_gateway = \
+            self.ec2_gateways.by_account_id_and_region(
+                vpc1.account_id, vpc1.region)
+        ec2_resource = ec2_gateway.resource()
 
         return next(
             iter(ec2_resource.vpc_peering_connections.filter(

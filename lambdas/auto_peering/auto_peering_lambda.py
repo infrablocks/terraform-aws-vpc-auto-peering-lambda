@@ -3,8 +3,9 @@ import logging
 import json
 import os
 
-from auto_peering.ec2_gateway import EC2Gateway
+from auto_peering.ec2_gateways import EC2Gateways
 from auto_peering.s3_event_sns_message import S3EventSNSMessage
+from auto_peering.session_store import SessionStore
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.utils import split_and_strip
 
@@ -19,18 +20,23 @@ def peer_vpcs_for(event, _):
     logger.debug('Processing event: {}'.format(json.dumps(event)))
 
     default_region = os.environ.get('AWS_REGION')
+    default_peering_role_name = 'vpc-auto-peering-role'
+
+    sts_client = boto3.client('sts')
+    current_account_id = sts_client.get_caller_identity()["Account"]
+
     search_regions = split_and_strip(
         os.environ.get('AWS_SEARCH_REGIONS') or default_region)
+    search_accounts = split_and_strip(
+        os.environ.get('AWS_SEARCH_ACCOUNTS') or current_account_id)
+    peering_role_name = split_and_strip(
+        os.environ.get('AWS_PEERING_ROLE_NAME') or default_peering_role_name)
 
-    ec2_gateways = {
-        region: EC2Gateway(
-            boto3.resource('ec2', region_name=region),
-            boto3.client('ec2', region_name=region),
-            region)
-        for region in search_regions
-    }
+    session_store = SessionStore(sts_client, peering_role_name)
+    ec2_gateways = EC2Gateways(session_store, search_accounts, search_regions)
 
     s3_event_sns_message = S3EventSNSMessage(event)
+    target_account_id = s3_event_sns_message.account_id()
     target_vpc_id = s3_event_sns_message.vpc_id()
     action = s3_event_sns_message.action()
     logger.info(
@@ -43,22 +49,21 @@ def peer_vpcs_for(event, _):
         "Looking up VPC links for VPC with ID: '%s'.",
         target_vpc_id)
 
-    vpc_links_for_target = vpc_links.resolve_for(target_vpc_id)
+    vpc_links_for_target = vpc_links.resolve_for(
+        target_account_id, target_vpc_id)
     logger.info(
         "Found %d VPC links for VPC with ID: '%s'.",
         len(vpc_links_for_target), target_vpc_id)
 
     for vpc_link in vpc_links_for_target:
         logger.info(
-            "Establishing peering relationship "
-            "between '%s' and '%s'.",
+            "Managing peering relationship between '%s' and '%s'.",
             vpc_link.vpc1.id,
             vpc_link.vpc2.id)
         vpc_link.peering_relationship.perform(action)
 
         logger.info(
-            "Creating peering routes "
-            "between '%s' and '%s'.",
+            "Managing peering routes between '%s' and '%s'.",
             vpc_link.vpc1.id,
             vpc_link.vpc2.id)
         vpc_link.peering_routes.perform(action)
