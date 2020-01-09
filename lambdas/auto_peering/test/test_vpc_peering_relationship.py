@@ -3,8 +3,9 @@ from unittest.mock import Mock, PropertyMock
 from botocore.exceptions import ClientError
 
 from auto_peering.ec2_gateway import EC2Gateway
+from auto_peering.vpc import VPC
 from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
-from test import randoms
+from test import randoms, mocks
 
 
 class TestVPCPeeringRelationshipFetch(unittest.TestCase):
@@ -335,17 +336,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
 
 class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
     def test_destroys_peering_connection(self):
-        region = 'eu-west-1'
+        account_id = randoms.account_id()
+        region = randoms.region()
 
-        vpc1 = Mock(name='VPC 1')
-        type(vpc1).region = PropertyMock(return_value=region)
-        vpc2 = Mock(name='VPC 2')
-        type(vpc2).region = PropertyMock(return_value=region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
 
-        ec2_resource = Mock(name='EC2 resource')
-        ec2_client = Mock(name='EC2 client')
-        ec2_gateway = EC2Gateway(ec2_resource, ec2_client, region)
-        ec2_gateways = {region: ec2_gateway}
+        ec2_gateway = mocks.EC2Gateway(account_id, region)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
 
         logger = Mock()
 
@@ -353,7 +351,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_resource.vpc_peering_connections = vpc_peering_connections
+        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections",
             return_value=iter([matching_vpc_peering_connection]))

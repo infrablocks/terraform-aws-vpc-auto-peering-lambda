@@ -22,11 +22,11 @@ def build_sts_assume_role_mock():
 
 
 def build_vpc_response_mock(**kwargs):
-    vpc = mock.Mock(name=kwargs.get('name', 'VPC'))
-    vpc.id = kwargs.get('id', randoms.vpc_id())
-    vpc.tags = kwargs.get('tags', builders.build_vpc_tags())
+    vpc_response = mock.Mock(name=kwargs.get('name', 'VPC'))
+    vpc_response.id = kwargs.get('id', randoms.vpc_id())
+    vpc_response.tags = kwargs.get('tags', builders.build_vpc_tags())
 
-    return vpc
+    return vpc_response
 
 
 class EC2Gateways(object):
