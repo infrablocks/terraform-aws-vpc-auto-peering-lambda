@@ -5,3 +5,15 @@ vars:
   region: "%{hiera('region')}"
 
   deployment_identifier: "%{hiera('deployment_identifier')}"
+
+  search_regions:
+    - "eu-west-1"
+    - "eu-west-2"
+
+  search_accounts:
+    - "176145454894"
+
+  peering_role_name: "auto-peering-role"
+
+  assumable_roles:
+    - "arn:aws:iam::176145454894:role/auto-peering-role"
