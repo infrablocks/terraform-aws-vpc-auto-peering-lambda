@@ -50,8 +50,8 @@ class VPCPeeringRelationship(object):
 
         try:
             ec2_gateway = self.ec2_gateways.get(vpc2_region)
-            ec2_resource = ec2_gateway.resource
-            ec2_client = ec2_gateway.client
+            ec2_resource = ec2_gateway.resource()
+            ec2_client = ec2_gateway.client()
 
             vpc_peering_connection_id = requester_vpc_peering_connection.id
 

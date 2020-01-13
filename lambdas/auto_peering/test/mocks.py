@@ -36,6 +36,12 @@ class EC2Gateways(object):
     def all(self):
         return self.ec2_gateways
 
+    def get(self, region):
+        return next(ec2_gateway
+                    for ec2_gateway
+                    in self.ec2_gateways
+                    if (ec2_gateway.region == region))
+
     def by_account_id_and_region(self, account_id, region):
         return next(ec2_gateway
                     for ec2_gateway

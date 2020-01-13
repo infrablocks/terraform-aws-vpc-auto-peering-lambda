@@ -227,7 +227,7 @@ class TestVPCLinks(unittest.TestCase):
 
     def test_logs_not_found_target_vpc(self):
         region = randoms.region()
-        account_id = randoms.region()
+        account_id = randoms.account_id()
         vpc1_id = randoms.vpc_id()
 
         vpc1 = mocks.build_vpc_response_mock(
@@ -254,7 +254,7 @@ class TestVPCLinks(unittest.TestCase):
 
     def test_resolves_empty_set_for_missing_target_vpc(self):
         region = randoms.region()
-        account_id = randoms.region()
+        account_id = randoms.account_id()
         vpc1_id = randoms.vpc_id()
 
         ec2_gateway = mocks.EC2Gateway(account_id, region)
@@ -272,8 +272,8 @@ class TestVPCLinks(unittest.TestCase):
         self.assertEqual(resolved_vpc_links, set())
 
     def test_ignores_missing_dependencies(self):
+        account_id = randoms.account_id()
         region = randoms.region()
-        account_id = randoms.region()
         vpc1_id = randoms.vpc_id()
 
         vpc1 = mocks.build_vpc_response_mock(

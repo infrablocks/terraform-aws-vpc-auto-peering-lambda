@@ -28,6 +28,9 @@ class VPC(object):
     def component_instance_identifier(self):
         return "{}-{}".format(self.component, self.deployment_identifier)
 
+    def request_vpc_peering_connection(self, **kwargs):
+        return self.vpc_response.request_vpc_peering_connection(**kwargs)
+
     def _to_dict(self):
         return {
             'vpc_response': self.vpc_response,

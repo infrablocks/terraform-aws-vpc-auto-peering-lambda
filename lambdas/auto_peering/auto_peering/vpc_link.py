@@ -19,6 +19,9 @@ class VPCLink(object):
             'peering_routes': self.peering_routes
         }
 
+    def __str__(self):
+        return str(self._to_dict())
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self._to_dict() == other._to_dict()
