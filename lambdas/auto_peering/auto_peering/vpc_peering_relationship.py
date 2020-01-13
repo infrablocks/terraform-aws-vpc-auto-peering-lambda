@@ -103,6 +103,13 @@ class VPCPeeringRelationship(object):
             'vpcs': frozenset([self.vpc1, self.vpc2])
         }
 
+    def __repr__(self):
+        return "<%s.%s object at %s: %s>" % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self)),
+            repr(self._to_dict()))
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self._to_dict() == other._to_dict()
