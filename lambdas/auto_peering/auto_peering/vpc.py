@@ -28,6 +28,14 @@ class VPC(object):
     def component_instance_identifier(self):
         return "{}-{}".format(self.component, self.deployment_identifier)
 
+    @property
+    def tags(self):
+        return self.vpc_response.tags
+
+    @property
+    def cidr_block(self):
+        return self.vpc_response.cidr_block
+
     def request_vpc_peering_connection(self, **kwargs):
         return self.vpc_response.request_vpc_peering_connection(**kwargs)
 

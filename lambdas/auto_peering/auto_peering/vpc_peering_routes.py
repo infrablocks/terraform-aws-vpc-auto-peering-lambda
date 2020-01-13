@@ -13,9 +13,8 @@ class VPCPeeringRoutes(object):
 
     def __private_route_tables_for(self, vpc):
         ec2_gateway = self.ec2_gateways.get(vpc.region)
-        ec2_resource = ec2_gateway.resource
 
-        return ec2_resource.route_tables.filter(
+        return ec2_gateway.resource().route_tables.filter(
             Filters=[
                 {'Name': 'vpc-id', 'Values': [vpc.id]},
                 {'Name': 'tag:Tier', 'Values': ['private']}])
@@ -50,7 +49,7 @@ class VPCPeeringRoutes(object):
         for route_table in route_tables:
             try:
                 ec2_gateway = self.ec2_gateways.get(source_vpc.region)
-                ec2_resource = ec2_gateway.resource
+                ec2_resource = ec2_gateway.resource()
                 route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()

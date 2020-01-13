@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 from botocore.exceptions import ClientError
 
-from auto_peering.ec2_gateway import EC2Gateway
+from auto_peering.vpc import VPC
 from auto_peering.vpc_peering_routes import VPCPeeringRoutes
-
+from test import randoms, mocks
 
 def mock_route_for(*definitions):
     def route_constructor(route_table_id, destination_cidr):
@@ -21,23 +21,16 @@ def mock_route_for(*definitions):
 
 class TestVPCPeeringRoutesProvision(unittest.TestCase):
     def test_creates_routes_in_vpc1_for_vpc2_via_peering_connection(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -46,15 +39,15 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
         vpc2_route_table_2 = Mock(name="VPC 2 route table 2")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc1_route_table_1, vpc1_route_table_2]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc2_route_table_1, vpc2_route_table_2]))
 
@@ -76,23 +69,16 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             VpcPeeringConnectionId=vpc_peering_connection.id)
 
     def test_creates_routes_in_vpc2_for_vpc1_via_peering_connection(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -101,15 +87,15 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
         vpc2_route_table_2 = Mock(name="VPC 2 route table 2")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc1_route_table_1, vpc1_route_table_2]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=([vpc2_route_table_1, vpc2_route_table_2]))
 
@@ -131,35 +117,28 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             VpcPeeringConnectionId=vpc_peering_connection.id)
 
     def test_handles_no_matching_route_tables(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([]))
 
@@ -178,37 +157,29 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
                 'Expected no exception but encountered: {0}'.format(exception))
 
     def test_logs_that_routes_are_being_added_for_a_vpc(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
-
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc1_route_table_1]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([]))
 
@@ -227,37 +198,30 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             vpc1.id, vpc2.id, vpc2.cidr_block, vpc_peering_connection.id)
 
     def test_logs_that_route_creation_succeeded(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc1_route_table_1]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([]))
 
@@ -276,38 +240,31 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
             vpc1_route_table_1.id)
 
     def test_logs_that_route_creation_failed_and_continues_on_exception(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc2_route_table_1 = Mock(name="VPC 2 route table 1")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc1_route_table_1]))
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=iter([vpc2_route_table_1]))
 
@@ -337,23 +294,16 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
 
 class TestVPCPeeringRoutesDestroy(unittest.TestCase):
     def test_destroys_routes_in_vpc1_for_vpc2_via_peering_connection(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -363,19 +313,19 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
         vpc1_route_table_2_route = Mock(name="VPC 1 route table 2 route")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc1_route_table_1, vpc1_route_table_2])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
-        ec2_resource_1.Route = Mock(
+        ec2_gateway_1.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -397,23 +347,16 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_2_route.delete.assert_called()
 
     def test_destroys_routes_in_vpc2_for_vpc1_via_peering_connection(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -423,19 +366,19 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc2_route_table_1_route = Mock(name="VPC 2 route table 1 route")
         vpc2_route_table_2_route = Mock(name="VPC 2 route table 2 route")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc2_route_table_1, vpc2_route_table_2])
 
-        ec2_resource_2.Route = Mock(
+        ec2_gateway_2.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc2_route_table_1.id, vpc1.cidr_block],
@@ -457,35 +400,28 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc2_route_table_2_route.delete.assert_called()
 
     def test_handles_no_matching_route_tables(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
@@ -504,42 +440,34 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
                 'Expected no exception but encountered: {0}'.format(exception))
 
     def test_logs_that_routes_are_being_deleted_for_a_vpc(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
-
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc1_route_table_1])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
-        ec2_resource_1.Route = Mock(
+        ec2_gateway_1.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -561,43 +489,35 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             vpc1.id, vpc2.id, vpc2.cidr_block, vpc_peering_connection.id)
 
     def test_logs_that_route_deletion_succeeded(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        region_1 = randoms.region()
+        region_2 = randoms.region()
+        account_id = randoms.account_id()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
-
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
         logger = Mock()
 
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc1_route_table_1])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[])
 
 
-        ec2_resource_1.Route = Mock(
+        ec2_gateway_1.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
@@ -618,23 +538,16 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
             vpc1_route_table_1.id)
 
     def test_logs_that_route_deletion_failed_and_continues_on_exception(self):
-        region_1 = 'eu-west-1'
-        region_2 = 'eu-west-2'
+        account_id = randoms.account_id()
+        region_1 = randoms.region()
+        region_2 = randoms.region()
 
-        vpc1 = Mock(name="VPC 1")
-        type(vpc1).region = PropertyMock(return_value=region_1)
-        vpc2 = Mock(name="VPC 2")
-        type(vpc2).region = PropertyMock(return_value=region_2)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region_1)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region_2)
 
-        ec2_resource_1 = Mock(name='EC2 resource')
-        ec2_client_1 = Mock(name='EC2 client')
-        ec2_resource_2 = Mock(name='EC2 resource')
-        ec2_client_2 = Mock(name='EC2 client')
-
-        ec2_gateways = {
-            region_1: EC2Gateway(ec2_resource_1, ec2_client_1, region_1),
-            region_2: EC2Gateway(ec2_resource_2, ec2_client_2, region_2)
-        }
+        ec2_gateway_1 = mocks.EC2Gateway(account_id, region_1)
+        ec2_gateway_2 = mocks.EC2Gateway(account_id, region_2)
+        ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
 
         logger = Mock()
 
@@ -644,24 +557,24 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
         vpc2_route_table_1_route = Mock(name="VPC 2 route table 1 route")
 
-        ec2_resource_1.route_tables = Mock(
+        ec2_gateway_1.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_1.route_tables.filter = Mock(
+        ec2_gateway_1.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc1_route_table_1])
 
-        ec2_resource_2.route_tables = Mock(
+        ec2_gateway_2.resource().route_tables = Mock(
             name="VPC route tables")
-        ec2_resource_2.route_tables.filter = Mock(
+        ec2_gateway_2.resource().route_tables.filter = Mock(
             name="Filtered VPC route tables",
             return_value=[vpc2_route_table_1])
 
-        ec2_resource_1.Route = Mock(
+        ec2_gateway_1.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc1_route_table_1.id, vpc2.cidr_block],
                  'return': vpc1_route_table_1_route}))
-        ec2_resource_2.Route = Mock(
+        ec2_gateway_2.resource().Route = Mock(
             name="Route constructor",
             side_effect=mock_route_for(
                 {'arguments': [vpc2_route_table_1.id, vpc1.cidr_block],
