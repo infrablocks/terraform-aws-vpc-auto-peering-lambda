@@ -66,6 +66,10 @@ def vpc_id():
     return "vpc-%s" % numeric_string(17)
 
 
+def route_table_id():
+    return "rtb-%s" % numeric_string(17)
+
+
 def role_name():
     return hyphenated_lowercase_string(32)
 
@@ -95,6 +99,10 @@ def credentials():
         access_key,
         secret_key,
         token)
+
+
+def cidr_block():
+    return element(['10.0.0.0/24', '10.0.1.0/24', '10.0.2.0/24'])
 
 
 def component():

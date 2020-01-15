@@ -25,6 +25,7 @@ def build_vpc_response_mock(**kwargs):
     vpc_response = mock.Mock(name=kwargs.get('name', 'VPC'))
     vpc_response.id = kwargs.get('id', randoms.vpc_id())
     vpc_response.tags = kwargs.get('tags', builders.build_vpc_tags())
+    vpc_response.cidr_block = kwargs.get('cidr_block', randoms.cidr_block())
 
     return vpc_response
 

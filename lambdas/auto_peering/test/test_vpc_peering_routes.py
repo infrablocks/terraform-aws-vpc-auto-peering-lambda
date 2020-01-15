@@ -310,6 +310,9 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
         vpc1_route_table_1 = Mock(name="VPC 1 route table 1")
         vpc1_route_table_2 = Mock(name="VPC 1 route table 2")
 
+        vpc1_route_table_1.id = randoms.route_table_id()
+        vpc1_route_table_2.id = randoms.route_table_id()
+
         vpc1_route_table_1_route = Mock(name="VPC 1 route table 1 route")
         vpc1_route_table_2_route = Mock(name="VPC 1 route table 2 route")
 
