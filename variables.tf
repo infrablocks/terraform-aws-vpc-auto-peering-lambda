@@ -27,8 +27,3 @@ variable "peering_role_name" {
   type = string
   default = ""
 }
-variable "assumable_roles" {
-  type = list(string)
-  default = []
-  description = "A list of role ARNs corresponding to roles that should be assumable by the lambda."
-}
