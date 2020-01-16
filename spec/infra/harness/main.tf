@@ -17,5 +17,4 @@ module "vpc_auto_peering_lambda" {
   search_regions = var.search_regions
   search_accounts = var.search_accounts
   peering_role_name = var.peering_role_name
-  assumable_roles = var.assumable_roles
 }

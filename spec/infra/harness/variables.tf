@@ -8,6 +8,3 @@ variable "search_accounts" {
   type = list(string)
 }
 variable "peering_role_name" {}
-variable "assumable_roles" {
-  type = list(string)
-}

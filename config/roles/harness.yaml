@@ -14,6 +14,3 @@ vars:
     - "176145454894"
 
   peering_role_name: "auto-peering-role"
-
-  assumable_roles:
-    - "arn:aws:iam::176145454894:role/auto-peering-role"

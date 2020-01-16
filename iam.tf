@@ -1,3 +1,10 @@
+locals {
+  assumable_roles = [
+    for account in var.search_accounts:
+          "arn:aws:iam::${account}:role/${var.peering_role_name}"
+  ]
+}
+
 data "aws_iam_policy_document" "vpc_auto_peering_lambda_assume_role_policy" {
   statement {
     effect = "Allow"
@@ -14,7 +21,7 @@ data "aws_iam_policy_document" "vpc_auto_peering_lambda_assume_role_policy" {
 data "aws_iam_policy_document" "vpc_auto_peering_lambda_policy" {
   statement {
     effect = "Allow"
-    resources = var.assumable_roles
+    resources = local.assumable_roles
 
     actions = [
       "sts:AssumeRole"

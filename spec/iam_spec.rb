@@ -3,7 +3,8 @@ require 'spec_helper'
 describe 'IAM policies, profiles and roles' do
   let(:region) { vars.region }
   let(:deployment_identifier) { vars.deployment_identifier }
-  let(:assumable_roles) { vars.assumable_roles }
+  let(:search_accounts) { vars.search_accounts }
+  let(:peering_role_name) { vars.peering_role_name }
   let(:role_arn) { output_for(:harness, 'lambda_role_arn') }
 
   context 'vpc auto peering lambda role' do
@@ -41,10 +42,11 @@ describe 'IAM policies, profiles and roles' do
     end
 
     it 'allows only assumable roles to be assumed' do
-      assumable_roles.each do |assumable_role|
+      search_accounts.each do |search_account|
         expect(subject)
             .to(be_allowed_action('sts:AssumeRole')
-                .resource_arn(assumable_role))
+                .resource_arn(
+                    "arn:aws:iam::#{search_account}:role/#{peering_role_name}"))
       end
       expect(subject)
           .not_to(be_allowed_action('sts:AssumeRole')
