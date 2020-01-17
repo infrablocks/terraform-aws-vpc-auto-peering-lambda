@@ -16,7 +16,7 @@ class SessionStore(object):
         assumed_role_response = \
             self.client.assume_role(
                 RoleArn=role_arn_for(account_id, self.peering_role_name),
-                RoleSessionName="VPC Auto Peering Lambda")
+                RoleSessionName="vpc-auto-peering-lambda")
         credentials = assumed_role_response['Credentials']
 
         return boto3.session.Session(

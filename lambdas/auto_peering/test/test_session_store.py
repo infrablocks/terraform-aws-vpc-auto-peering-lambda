@@ -25,7 +25,7 @@ class TestSessionStore(unittest.TestCase):
 
         expected_role_arn = \
             builders.build_role_arn_for(account_id, peering_role_name)
-        expected_role_session_name = "VPC Auto Peering Lambda"
+        expected_role_session_name = "vpc-auto-peering-lambda"
 
         self.assertEqual(len(sts_client.assume_role.mock_calls), 1)
         self.assertEqual(
