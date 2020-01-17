@@ -29,8 +29,8 @@ def peer_vpcs_for(event, _):
         os.environ.get('AWS_SEARCH_REGIONS') or default_region)
     search_accounts = split_and_strip(
         os.environ.get('AWS_SEARCH_ACCOUNTS') or current_account_id)
-    peering_role_name = split_and_strip(
-        os.environ.get('AWS_PEERING_ROLE_NAME') or default_peering_role_name)
+    peering_role_name = \
+        os.environ.get('AWS_PEERING_ROLE_NAME') or default_peering_role_name
 
     session_store = SessionStore(sts_client, peering_role_name)
     ec2_gateways = EC2Gateways(session_store, search_accounts, search_regions)
