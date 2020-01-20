@@ -194,7 +194,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             vpc1, vpc2, ec2_gateways, logger)
         vpc_peering_relationship.provision()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1.id, vpc2.id)
 
@@ -224,7 +224,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             vpc1, vpc2, ec2_gateways, logger)
         vpc_peering_relationship.provision()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Accepting peering connection between: '%s' and: '%s'.",
             vpc1.id, vpc2.id)
 
@@ -356,7 +356,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             vpc1, vpc2, ec2_gateways, logger)
         vpc_peering_relationship.destroy()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Destroying peering connection between: '%s' and: '%s'.",
             matching_vpc_peering_connection.requester_vpc.id,
             matching_vpc_peering_connection.accepter_vpc.id)
@@ -411,6 +411,6 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             vpc1, vpc2, ec2_gateways, logger)
         vpc_peering_relationship.destroy()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "No peering connection to destroy between: '%s' and: '%s'.",
             vpc1.id, vpc2.id)

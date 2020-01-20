@@ -27,7 +27,7 @@ class VPCPeeringRoutes(object):
                 route_table.create_route(
                     DestinationCidrBlock=destination_vpc.cidr_block,
                     VpcPeeringConnectionId=vpc_peering_connection.id)
-                self.logger.debug(
+                self.logger.info(
                     "Route creation succeeded for '%s'. Continuing.",
                     route_table.id)
             except ClientError as error:
@@ -37,7 +37,7 @@ class VPCPeeringRoutes(object):
 
     def __create_routes_for(self, source_vpc, destination_vpc,
                             vpc_peering_connection):
-        self.logger.debug(
+        self.logger.info(
             "Adding routes to private subnets in: '%s' pointing at '%s:%s:%s'.",
             source_vpc.id, destination_vpc.id, destination_vpc.cidr_block,
             vpc_peering_connection.id)
@@ -56,7 +56,7 @@ class VPCPeeringRoutes(object):
                 route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
                 route.delete()
-                self.logger.debug(
+                self.logger.info(
                     "Route deletion succeeded for '%s'. Continuing.",
                     route_table.id)
             except ClientError as error:
@@ -66,7 +66,7 @@ class VPCPeeringRoutes(object):
 
     def __delete_routes_for(self, source_vpc, destination_vpc,
                             vpc_peering_connection):
-        self.logger.debug(
+        self.logger.info(
             "Removing routes from private subnets in: '%s' pointing at "
             "'%s:%s:%s'.",
             source_vpc.id, destination_vpc.id, destination_vpc.cidr_block,

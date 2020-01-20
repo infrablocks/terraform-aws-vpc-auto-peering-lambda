@@ -250,11 +250,11 @@ class TestVPCLinks(unittest.TestCase):
         vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(account_id, vpc1_id)
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Computing VPC links for VPC with ID: '%s' " 
             "in account with ID: '%s'.",
             vpc1.id, account_id)
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Found target VPC with ID: '%s', component: '%s', "
             "deployment identifier: '%s' and dependencies: '%s'.",
             vpc1.id, 'thing1', 'gold', ['thing2-silver'])
@@ -283,7 +283,7 @@ class TestVPCLinks(unittest.TestCase):
         vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(account_id, vpc1_id)
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "No VPC found with ID: '%s'. Aborting.", vpc1.id)
 
     def test_resolves_empty_set_for_missing_target_vpc(self):
@@ -392,7 +392,7 @@ class TestVPCLinks(unittest.TestCase):
         vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(account_id, target_vpc_id)
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Found dependency VPCs: [%s]",
             "'thing2-silver':'%s', 'thing3-bronze':'%s'" % (
                 dependency_vpc1_id, dependency_vpc2_id))
@@ -442,7 +442,7 @@ class TestVPCLinks(unittest.TestCase):
         vpc_links = VPCLinks(ec2_gateways, logger)
         vpc_links.resolve_for(account_id, target_vpc_id)
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Found dependent VPCs: [%s]",
             "'thing2-silver':'%s', 'thing3-bronze':'%s'" % (
                 dependent_vpc1_id, dependent_vpc2_id))

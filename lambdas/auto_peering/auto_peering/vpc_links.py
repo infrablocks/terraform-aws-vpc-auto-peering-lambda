@@ -15,7 +15,7 @@ class VPCLinks(object):
             source, target, self.ec2_gateways, self.logger)
 
     def resolve_for(self, target_account_id, target_vpc_id):
-        self.logger.debug(
+        self.logger.info(
             "Computing VPC links for VPC with ID: '%s' " 
             "in account with ID: '%s'.",
             target_vpc_id,
@@ -25,7 +25,7 @@ class VPCLinks(object):
             self.all_vpcs.find_by_account_id_and_vpc_id(
                 target_account_id, target_vpc_id)
         if target_vpc:
-            self.logger.debug(
+            self.logger.info(
                 "Found target VPC with ID: '%s', component: '%s', "
                 "deployment identifier: '%s' and dependencies: '%s'.",
                 target_vpc_id,
@@ -33,12 +33,12 @@ class VPCLinks(object):
                 target_vpc.deployment_identifier,
                 target_vpc.dependencies)
         else:
-            self.logger.debug(
+            self.logger.info(
                 "No VPC found with ID: '%s'. Aborting.", target_vpc_id)
             return frozenset()
 
         dependency_vpcs = self.all_vpcs.find_dependencies_of(target_vpc)
-        self.logger.debug(
+        self.logger.info(
             "Found dependency VPCs: [%s]",
             ', '.join([
                 "'{}':'{}'".format(
@@ -47,7 +47,7 @@ class VPCLinks(object):
                 for dependency_vpc in dependency_vpcs]))
 
         dependent_vpcs = self.all_vpcs.find_dependents_of(target_vpc)
-        self.logger.debug(
+        self.logger.info(
             "Found dependent VPCs: [%s]",
             ', '.join([
                 "'{}':'{}'".format(

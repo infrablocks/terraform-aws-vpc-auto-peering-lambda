@@ -193,7 +193,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
 
         vpc_peering_routes.provision()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Adding routes to private subnets in: '%s' pointing at '%s:%s:%s'.",
             vpc1.id, vpc2.id, vpc2.cidr_block, vpc_peering_connection.id)
 
@@ -235,7 +235,7 @@ class TestVPCPeeringRoutesProvision(unittest.TestCase):
 
         vpc_peering_routes.provision()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Route creation succeeded for '%s'. Continuing.",
             vpc1_route_table_1.id)
 
@@ -486,7 +486,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
 
         vpc_peering_routes.destroy()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Removing routes from private subnets in: '%s' pointing at "
             "'%s:%s:%s'.",
             vpc1.id, vpc2.id, vpc2.cidr_block, vpc_peering_connection.id)
@@ -536,7 +536,7 @@ class TestVPCPeeringRoutesDestroy(unittest.TestCase):
 
         vpc_peering_routes.destroy()
 
-        logger.debug.assert_any_call(
+        logger.info.assert_any_call(
             "Route deletion succeeded for '%s'. Continuing.",
             vpc1_route_table_1.id)
 

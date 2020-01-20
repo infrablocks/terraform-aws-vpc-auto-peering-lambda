@@ -42,7 +42,7 @@ class VPCPeeringRelationship(object):
         vpc2_region = self.vpc2.region
         vpc2_account_id = self.vpc2.account_id
 
-        self.logger.debug(
+        self.logger.info(
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1_id, vpc2_id)
         requester_vpc_peering_connection = self. \
@@ -57,7 +57,7 @@ class VPCPeeringRelationship(object):
 
             vpc_peering_connection_id = requester_vpc_peering_connection.id
 
-            self.logger.debug(
+            self.logger.info(
                 "Waiting for peering connection between: '%s' and: '%s' to "
                 "exist.",
                 vpc1_id, vpc2_id)
@@ -66,7 +66,7 @@ class VPCPeeringRelationship(object):
                 VpcPeeringConnectionIds=[vpc_peering_connection_id],
                 WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
 
-            self.logger.debug(
+            self.logger.info(
                 "Accepting peering connection between: '%s' and: '%s'.",
                 vpc1_id, vpc2_id)
 
@@ -86,13 +86,13 @@ class VPCPeeringRelationship(object):
     def destroy(self):
         vpc_peering_connection = self.fetch()
         if vpc_peering_connection:
-            self.logger.debug(
+            self.logger.info(
                 "Destroying peering connection between: '%s' and: '%s'.",
                 vpc_peering_connection.requester_vpc.id,
                 vpc_peering_connection.accepter_vpc.id)
             vpc_peering_connection.delete()
         else:
-            self.logger.debug(
+            self.logger.info(
                 "No peering connection to destroy between: '%s' and: '%s'.",
                 self.vpc1.id,
                 self.vpc2.id)

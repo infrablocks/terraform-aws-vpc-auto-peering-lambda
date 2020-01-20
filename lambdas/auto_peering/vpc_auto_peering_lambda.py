@@ -13,11 +13,11 @@ logging.getLogger('botocore').setLevel(logging.CRITICAL)
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
-def peer_vpcs_for(event, _):
-    logger.debug('Processing event: {}'.format(json.dumps(event)))
+def peer_vpcs_for(e vent, _):
+    logger.info('Processing event: {}'.format(json.dumps(event)))
 
     default_region = os.environ.get('AWS_REGION')
     default_peering_role_name = 'vpc-auto-peering-role'
