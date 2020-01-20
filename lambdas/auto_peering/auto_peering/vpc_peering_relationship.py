@@ -46,7 +46,8 @@ class VPCPeeringRelationship(object):
             "Requesting peering connection between: '%s' and: '%s'.",
             vpc1_id, vpc2_id)
         requester_vpc_peering_connection = self. \
-            vpc1.request_vpc_peering_connection(PeerVpcId=vpc2_id,
+            vpc1.request_vpc_peering_connection(PeerOwnerId=vpc2_account_id,
+                                                PeerVpcId=vpc2_id,
                                                 PeerRegion=vpc2_region)
 
         try:

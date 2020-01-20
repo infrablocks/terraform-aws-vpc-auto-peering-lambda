@@ -133,14 +133,16 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
 
 class TestVPCPeeringRelationshipProvision(unittest.TestCase):
     def test_requests_and_accepts_a_peering_connection(self):
-        account_id = mocks.randoms.account_id()
+        requester_account_id = mocks.randoms.account_id()
+        accepter_account_id = mocks.randoms.account_id()
         region = mocks.randoms.region()
 
-        vpc1 = VPC(mocks.build_vpc_response_mock(), account_id, region)
-        vpc2 = VPC(mocks.build_vpc_response_mock(), account_id, region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), requester_account_id, region)
+        vpc2 = VPC(mocks.build_vpc_response_mock(), accepter_account_id, region)
 
-        ec2_gateway = mocks.EC2Gateway(account_id, region)
-        ec2_gateways = mocks.EC2Gateways([ec2_gateway])
+        requester_ec2_gateway = mocks.EC2Gateway(requester_account_id, region)
+        accepter_ec2_gateway = mocks.EC2Gateway(accepter_account_id, region)
+        ec2_gateways = mocks.EC2Gateways([requester_ec2_gateway, accepter_ec2_gateway])
 
         logger = Mock()
 
@@ -153,7 +155,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
+        accepter_ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
         vpc_peering_connections.filter = Mock(
             name="Filter VPC peering connections for region: {}". \
                 format(region),
@@ -164,7 +166,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         vpc_peering_relationship.provision()
 
         vpc1.request_vpc_peering_connection. \
-            assert_called_with(PeerVpcId=vpc2.id, PeerRegion=region)
+            assert_called_with(PeerOwnerId=accepter_account_id, PeerVpcId=vpc2.id, PeerRegion=region)
         matching_vpc_peering_connection.accept. \
             assert_called()
 
