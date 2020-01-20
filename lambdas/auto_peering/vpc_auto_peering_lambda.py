@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def peer_vpcs_for(e vent, _):
+def peer_vpcs_for(event, _):
     logger.info('Processing event: {}'.format(json.dumps(event)))
 
     default_region = os.environ.get('AWS_REGION')
