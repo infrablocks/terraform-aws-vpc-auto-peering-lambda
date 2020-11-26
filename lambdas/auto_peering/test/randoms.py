@@ -70,6 +70,10 @@ def route_table_id():
     return "rtb-%s" % numeric_string(17)
 
 
+def peering_connection_id():
+    return "pcx-%s" % alphanumeric_string(17)
+
+
 def role_name():
     return hyphenated_lowercase_string(32)
 

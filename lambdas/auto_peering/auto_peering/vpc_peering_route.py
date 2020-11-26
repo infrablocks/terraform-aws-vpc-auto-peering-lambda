@@ -48,7 +48,8 @@ class VPCPeeringRoute(object):
             self.__private_route_tables_for(source_vpc),
             destination_vpc, vpc_peering_connection)
 
-    def __delete_routes_in(self, route_tables, source_vpc, destination_vpc):
+    def __delete_routes_in(self, route_tables, source_vpc, destination_vpc,
+                           vpc_peering_connection):
         for route_table in route_tables:
             try:
                 ec2_gateway = self.ec2_gateways.\
@@ -57,10 +58,16 @@ class VPCPeeringRoute(object):
                 ec2_resource = ec2_gateway.resource()
                 route = ec2_resource.Route(
                     route_table.id, destination_vpc.cidr_block)
-                route.delete()
-                self.logger.info(
-                    "Route deletion succeeded for '%s'. Continuing.",
-                    route_table.id)
+                if route.vpc_peering_connection_id == vpc_peering_connection.id:
+                    route.delete()
+                    self.logger.info(
+                        "Route deletion succeeded for '%s'. Continuing.",
+                         route_table.id)
+                else:
+                    self.logger.info(
+                        "Route deletion skipped for '%s' as route does not "
+                        "pertain to VPC peering connection '%s'. Continuing.",
+                        route_table.id, vpc_peering_connection.id)
             except ClientError as error:
                 self.logger.warn(
                     "Route deletion failed for '%s'. Error was: %s",
@@ -77,7 +84,8 @@ class VPCPeeringRoute(object):
         self.__delete_routes_in(
             self.__private_route_tables_for(source_vpc),
             source_vpc,
-            destination_vpc)
+            destination_vpc,
+            vpc_peering_connection)
 
     def provision(self):
         vpc_peering_connection = self.vpc_peering_relationship.fetch()
@@ -94,7 +102,7 @@ class VPCPeeringRoute(object):
 
     def _to_dict(self):
         return {
-            'vpcs': frozenset([self.vpc1, self.vpc2]),
+            'vpcs': tuple([self.vpc1, self.vpc2]),
             'vpc_peering_relationship': self.vpc_peering_relationship,
         }
 
