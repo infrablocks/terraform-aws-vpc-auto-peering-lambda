@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import Mock
 
-from auto_peering.ec2_gateway import EC2Gateway
 from auto_peering.vpc import VPC
 from auto_peering.vpc_links import VPCLinks
 from auto_peering.vpc_link import VPCLink
@@ -17,27 +16,27 @@ class TestVPCLinks(unittest.TestCase):
 
         target_vpc_response = mocks.build_vpc_response_mock(
             id=target_vpc_id,
-            name="VPC 1",
+            name="Target VPC",
             tags=builders.build_vpc_tags(
                 component='thing1',
                 deployment_identifier='gold',
                 dependencies=['thing2-silver', 'thing3-bronze']))
 
-        dependency_vpc1_response = mocks.build_vpc_response_mock(
-            name='Dependency VPC 1',
+        dependent_dependency_vpc_response = mocks.build_vpc_response_mock(
+            name='Dependent Dependency VPC',
             tags=builders.build_vpc_tags(
                 component='thing2',
                 deployment_identifier='silver',
-                dependencies=[]))
-        dependency_vpc2_response = mocks.build_vpc_response_mock(
-            name='Dependency VPC 2',
+                dependencies=['thing1-gold']))
+        standard_dependency_vpc_response = mocks.build_vpc_response_mock(
+            name='Standard Dependency VPC',
             tags=builders.build_vpc_tags(
                 component='thing3',
                 deployment_identifier='bronze',
                 dependencies=[]))
 
-        dependent_vpc_response = mocks.build_vpc_response_mock(
-            name='Dependent VPC',
+        standard_dependent_vpc_response = mocks.build_vpc_response_mock(
+            name='Standard Dependent VPC',
             tags=builders.build_vpc_tags(
                 component='thing4',
                 deployment_identifier='lead',
@@ -50,6 +49,14 @@ class TestVPCLinks(unittest.TestCase):
                 deployment_identifier='copper',
                 dependencies=[]))
 
+        target_vpc = VPC(target_vpc_response, account_id, region)
+        dependent_dependency_vpc = \
+            VPC(dependent_dependency_vpc_response, account_id, region)
+        standard_dependency_vpc = \
+            VPC(standard_dependency_vpc_response, account_id, region)
+        standard_dependent_vpc = \
+            VPC(standard_dependent_vpc_response, account_id, region)
+
         ec2_gateway = mocks.EC2Gateway(account_id, region)
         ec2_gateways = mocks.EC2Gateways([ec2_gateway])
         logger = Mock(name="Logger")
@@ -57,11 +64,11 @@ class TestVPCLinks(unittest.TestCase):
         ec2_gateway.resource().vpcs.all = Mock(
             name='All VPCs',
             return_value=[
-                dependency_vpc1_response,
+                dependent_dependency_vpc_response,
                 target_vpc_response,
-                dependent_vpc_response,
+                standard_dependent_vpc_response,
                 other_vpc_response,
-                dependency_vpc2_response
+                standard_dependency_vpc_response
             ])
 
         vpc_links = VPCLinks(ec2_gateways, logger)
@@ -71,22 +78,23 @@ class TestVPCLinks(unittest.TestCase):
             resolved_vpc_links,
             {
                 VPCLink(
-                    VPC(target_vpc_response, account_id, region),
-                    VPC(dependency_vpc1_response, account_id, region),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[target_vpc, dependent_dependency_vpc],
+                    routes=[[target_vpc, dependent_dependency_vpc],
+                            [dependent_dependency_vpc, target_vpc]]
                 ),
                 VPCLink(
-                    VPC(target_vpc_response, account_id, region),
-                    VPC(dependency_vpc2_response, account_id, region),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[target_vpc, standard_dependency_vpc],
+                    routes=[[target_vpc, standard_dependency_vpc]]
                 ),
                 VPCLink(
-                    VPC(dependent_vpc_response, account_id, region),
-                    VPC(target_vpc_response, account_id, region),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[standard_dependent_vpc, target_vpc],
+                    routes=[[standard_dependent_vpc, target_vpc]]
                 )})
 
     def test_resolves_using_multiple_ec2_gateways(self):
@@ -105,21 +113,21 @@ class TestVPCLinks(unittest.TestCase):
                 deployment_identifier='gold',
                 dependencies=['thing2-silver', 'thing3-bronze']))
 
-        dependency_vpc1_response = mocks.build_vpc_response_mock(
-            name='Dependency VPC 1',
+        dependent_dependency_vpc_response = mocks.build_vpc_response_mock(
+            name='Dependent Dependency VPC',
             tags=builders.build_vpc_tags(
                 component='thing2',
                 deployment_identifier='silver',
-                dependencies=[]))
-        dependency_vpc2_response = mocks.build_vpc_response_mock(
-            name='Dependency VPC 2',
+                dependencies=['thing1-gold']))
+        standard_dependency_vpc_response = mocks.build_vpc_response_mock(
+            name='Standard Dependency VPC',
             tags=builders.build_vpc_tags(
                 component='thing3',
                 deployment_identifier='bronze',
                 dependencies=[]))
 
-        dependent_vpc_response = mocks.build_vpc_response_mock(
-            name='Dependent VPC',
+        standard_dependent_vpc_response = mocks.build_vpc_response_mock(
+            name='Standard Dependent VPC',
             tags=builders.build_vpc_tags(
                 component='thing4',
                 deployment_identifier='lead',
@@ -132,6 +140,14 @@ class TestVPCLinks(unittest.TestCase):
                 deployment_identifier='copper',
                 dependencies=[]))
 
+        target_vpc = VPC(target_vpc_response, account_id_1, region_1)
+        dependent_dependency_vpc = \
+            VPC(dependent_dependency_vpc_response, account_id_1, region_1)
+        standard_dependency_vpc = \
+            VPC(standard_dependency_vpc_response, account_id_2, region_2)
+        standard_dependent_vpc = \
+            VPC(standard_dependent_vpc_response, account_id_1, region_1)
+
         ec2_gateway_1 = mocks.EC2Gateway(account_id_1, region_1)
         ec2_gateway_2 = mocks.EC2Gateway(account_id_2, region_2)
         ec2_gateways = mocks.EC2Gateways([ec2_gateway_1, ec2_gateway_2])
@@ -140,13 +156,13 @@ class TestVPCLinks(unittest.TestCase):
         ec2_gateway_1.resource().vpcs.all = Mock(
             name="All VPCs in account %s, region %s" % (account_id_1, region_1),
             return_value=[
-                dependency_vpc1_response,
+                dependent_dependency_vpc_response,
                 target_vpc_response,
-                dependent_vpc_response])
+                standard_dependent_vpc_response])
         ec2_gateway_2.resource().vpcs.all = Mock(
             name='All VPCs in account %s, region %s' % (account_id_2, region_2),
             return_value=[
-                dependency_vpc2_response,
+                standard_dependency_vpc_response,
                 other_vpc_response])
 
         vpc_links = VPCLinks(ec2_gateways, logger)
@@ -156,22 +172,23 @@ class TestVPCLinks(unittest.TestCase):
             resolved_vpc_links,
             {
                 VPCLink(
-                    VPC(target_vpc_response, account_id_1, region_1),
-                    VPC(dependency_vpc1_response, account_id_1, region_1),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[target_vpc, dependent_dependency_vpc],
+                    routes=[[target_vpc, dependent_dependency_vpc],
+                            [dependent_dependency_vpc, target_vpc]]
                 ),
                 VPCLink(
-                    VPC(target_vpc_response, account_id_1, region_1),
-                    VPC(dependency_vpc2_response, account_id_2, region_2),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[target_vpc, standard_dependency_vpc],
+                    routes=[[target_vpc, standard_dependency_vpc]]
                 ),
                 VPCLink(
-                    VPC(dependent_vpc_response, account_id_1, region_1),
-                    VPC(target_vpc_response, account_id_1, region_1),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[standard_dependent_vpc, target_vpc],
+                    routes=[[standard_dependent_vpc, target_vpc]]
                 )
             })
 
@@ -195,6 +212,9 @@ class TestVPCLinks(unittest.TestCase):
                 deployment_identifier="silver",
                 dependencies=["thing1-gold"]))
 
+        vpc1 = VPC(vpc1_response, account_id, region)
+        vpc2 = VPC(vpc2_response, account_id, region)
+
         ec2_gateway = mocks.EC2Gateway(account_id, region)
         ec2_gateways = mocks.EC2Gateways([ec2_gateway])
         logger = Mock(name="Logger")
@@ -213,10 +233,11 @@ class TestVPCLinks(unittest.TestCase):
             resolved_vpc_links,
             {
                 VPCLink(
-                    VPC(vpc1_response, account_id, region),
-                    VPC(vpc2_response, account_id, region),
                     ec2_gateways,
-                    logger
+                    logger,
+                    between=[vpc1, vpc2],
+                    routes=[[vpc1, vpc2],
+                            [vpc2, vpc1]]
                 )
             })
 
@@ -251,7 +272,7 @@ class TestVPCLinks(unittest.TestCase):
         vpc_links.resolve_for(account_id, vpc1_id)
 
         logger.info.assert_any_call(
-            "Computing VPC links for VPC with ID: '%s' " 
+            "Computing VPC links for VPC with ID: '%s' "
             "in account with ID: '%s'.",
             vpc1.id, account_id)
         logger.info.assert_any_call(
@@ -324,6 +345,9 @@ class TestVPCLinks(unittest.TestCase):
                 deployment_identifier="silver",
                 dependencies=[]))
 
+        vpc_1 = VPC(vpc_1_response, account_id, region)
+        vpc_2 = VPC(vpc_2_response, account_id, region)
+
         ec2_gateway = mocks.EC2Gateway(account_id, region)
         ec2_gateways = mocks.EC2Gateways([ec2_gateway])
         logger = Mock(name="Logger")
@@ -341,10 +365,10 @@ class TestVPCLinks(unittest.TestCase):
             resolved_vpc_links,
             {
                 VPCLink(
-                    VPC(vpc_1_response, account_id, region),
-                    VPC(vpc_2_response, account_id, region),
                     ec2_gateways,
-                    logger)
+                    logger,
+                    between=[vpc_1, vpc_2],
+                    routes=[[vpc_1, vpc_2]])
             })
 
     def test_logs_dependency_vpcs(self):

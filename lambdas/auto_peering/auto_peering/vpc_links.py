@@ -1,5 +1,3 @@
-from itertools import repeat
-
 from auto_peering.all_vpcs import AllVPCs
 from auto_peering.vpc_link import VPCLink
 
@@ -10,9 +8,8 @@ class VPCLinks(object):
         self.all_vpcs = AllVPCs(self.ec2_gateways)
         self.logger = logger
 
-    def __vpc_link_for(self, source, target):
-        return VPCLink(
-            source, target, self.ec2_gateways, self.logger)
+    def __vpc_link(self, between, routes):
+        return VPCLink(self.ec2_gateways, self.logger, between, routes)
 
     def resolve_for(self, target_account_id, target_vpc_id):
         self.logger.info(
@@ -55,13 +52,35 @@ class VPCLinks(object):
                     dependent_vpc.id)
                 for dependent_vpc in dependent_vpcs]))
 
-        vpc_pairs = list(zip(repeat(target_vpc), dependency_vpcs)) + \
-                    list(zip(dependent_vpcs, repeat(target_vpc)))
-
-        vpc_links = [
-            self.__vpc_link_for(source, target)
-            for (source, target)
-            in vpc_pairs
+        bidirectional_vpc_links = [
+            self.__vpc_link(
+                between=[target_vpc, dependency_vpc],
+                routes=[[target_vpc, dependency_vpc],
+                        [dependency_vpc, target_vpc]])
+            for dependency_vpc
+            in dependency_vpcs
+            if dependency_vpc in dependent_vpcs
         ]
+        dependency_only_vpc_links = [
+            self.__vpc_link(
+                between=[target_vpc, dependency_vpc],
+                routes=[[target_vpc, dependency_vpc]])
+            for dependency_vpc
+            in dependency_vpcs
+            if dependency_vpc not in dependent_vpcs
+        ]
+        dependent_only_vpc_links = [
+            self.__vpc_link(
+                between=[dependent_vpc, target_vpc],
+                routes=[[dependent_vpc, target_vpc]])
+            for dependent_vpc
+            in dependent_vpcs
+            if dependent_vpc not in dependency_vpcs
+        ]
+
+        vpc_links = \
+            bidirectional_vpc_links + \
+            dependency_only_vpc_links + \
+            dependent_only_vpc_links
 
         return frozenset(vpc_links)

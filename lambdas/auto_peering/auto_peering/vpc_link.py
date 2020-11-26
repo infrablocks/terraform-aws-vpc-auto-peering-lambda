@@ -1,22 +1,28 @@
 from auto_peering.vpc_peering_relationship import VPCPeeringRelationship
-from auto_peering.vpc_peering_routes import VPCPeeringRoutes
+from auto_peering.vpc_peering_route import VPCPeeringRoute
 
 
 class VPCLink(object):
-    def __init__(self, vpc1, vpc2, ec2_gateways, logger):
-        self.vpc1 = vpc1
-        self.vpc2 = vpc2
+    def __init__(self, ec2_gateways, logger, between, routes):
+        self.between = between
         self.peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
-        self.peering_routes = VPCPeeringRoutes(
-            vpc1, vpc2, self.peering_relationship,
-            ec2_gateways, logger)
+            ec2_gateways,
+            logger,
+            between=between)
+        self.peering_routes = [
+            VPCPeeringRoute(
+                ec2_gateways,
+                logger,
+                between=route,
+                peering_relationship=self.peering_relationship)
+            for route in routes
+        ]
 
     def _to_dict(self):
         return {
-            'vpcs': frozenset([self.vpc1, self.vpc2]),
+            'vpcs': tuple(self.between),
             'peering_relationship': self.peering_relationship,
-            'peering_routes': self.peering_routes
+            'peering_routes': tuple(self.peering_routes)
         }
 
     def __repr__(self):

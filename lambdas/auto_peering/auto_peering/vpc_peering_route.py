@@ -1,13 +1,15 @@
 from botocore.exceptions import ClientError
 
 
-class VPCPeeringRoutes(object):
-    def __init__(self, vpc1, vpc2,
-                 vpc_peering_relationship,
-                 ec2_gateways, logger):
-        self.vpc1 = vpc1
-        self.vpc2 = vpc2
-        self.vpc_peering_relationship = vpc_peering_relationship
+class VPCPeeringRoute(object):
+    def __init__(self,
+                 ec2_gateways,
+                 logger,
+                 between,
+                 peering_relationship):
+        self.vpc1 = between[0]
+        self.vpc2 = between[1]
+        self.vpc_peering_relationship = peering_relationship
         self.ec2_gateways = ec2_gateways
         self.logger = logger
 
@@ -81,13 +83,11 @@ class VPCPeeringRoutes(object):
         vpc_peering_connection = self.vpc_peering_relationship.fetch()
 
         self.__create_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
-        self.__create_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
 
     def destroy(self):
         vpc_peering_connection = self.vpc_peering_relationship.fetch()
 
         self.__delete_routes_for(self.vpc1, self.vpc2, vpc_peering_connection)
-        self.__delete_routes_for(self.vpc2, self.vpc1, vpc_peering_connection)
 
     def perform(self, action):
         getattr(self, action)()

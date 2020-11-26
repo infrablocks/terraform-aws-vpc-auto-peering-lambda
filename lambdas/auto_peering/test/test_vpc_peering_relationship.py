@@ -44,7 +44,7 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc_1, vpc_2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc_1, vpc_2])
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -91,7 +91,7 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc_1, vpc_2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc_1, vpc_2])
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -124,7 +124,7 @@ class TestVPCPeeringRelationshipFetch(unittest.TestCase):
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
 
         found_peering_connection = vpc_peering_relationship.fetch()
 
@@ -137,12 +137,14 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         accepter_account_id = mocks.randoms.account_id()
         region = mocks.randoms.region()
 
-        vpc1 = VPC(mocks.build_vpc_response_mock(), requester_account_id, region)
+        vpc1 = VPC(mocks.build_vpc_response_mock(), requester_account_id,
+                   region)
         vpc2 = VPC(mocks.build_vpc_response_mock(), accepter_account_id, region)
 
         requester_ec2_gateway = mocks.EC2Gateway(requester_account_id, region)
         accepter_ec2_gateway = mocks.EC2Gateway(accepter_account_id, region)
-        ec2_gateways = mocks.EC2Gateways([requester_ec2_gateway, accepter_ec2_gateway])
+        ec2_gateways = mocks.EC2Gateways(
+            [requester_ec2_gateway, accepter_ec2_gateway])
 
         logger = Mock()
 
@@ -155,18 +157,21 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
         matching_vpc_peering_connection = Mock(
             name='Matching VPC peering connection')
 
-        accepter_ec2_gateway.resource().vpc_peering_connections = vpc_peering_connections
+        accepter_ec2_gateway.resource().vpc_peering_connections = \
+            vpc_peering_connections
         vpc_peering_connections.filter = Mock(
-            name="Filter VPC peering connections for region: {}". \
-                format(region),
+            name="Filter VPC peering connections for region: {}".format(region),
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.provision()
 
         vpc1.request_vpc_peering_connection. \
-            assert_called_with(PeerOwnerId=accepter_account_id, PeerVpcId=vpc2.id, PeerRegion=region)
+            assert_called_with(
+            PeerOwnerId=accepter_account_id,
+            PeerVpcId=vpc2.id,
+            PeerRegion=region)
         matching_vpc_peering_connection.accept. \
             assert_called()
 
@@ -193,7 +198,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             return_value=iter([vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.provision()
 
         logger.info.assert_any_call(
@@ -223,7 +228,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             return_value=iter([vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.provision()
 
         logger.info.assert_any_call(
@@ -260,7 +265,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             side_effect=ClientError({'Error': {'Code': '123'}}, 'something'))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.provision()
 
         vpc_peering_connection.delete.assert_called()
@@ -296,7 +301,7 @@ class TestVPCPeeringRelationshipProvision(unittest.TestCase):
             side_effect=accept_error)
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.provision()
 
         logger.warn.assert_any_call(
@@ -328,7 +333,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.destroy()
 
         matching_vpc_peering_connection.delete.assert_called()
@@ -355,7 +360,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             return_value=iter([matching_vpc_peering_connection]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.destroy()
 
         logger.info.assert_any_call(
@@ -383,7 +388,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
 
         try:
             vpc_peering_relationship.destroy()
@@ -410,7 +415,7 @@ class TestVPCPeeringRelationshipDestroy(unittest.TestCase):
             return_value=iter([]))
 
         vpc_peering_relationship = VPCPeeringRelationship(
-            vpc1, vpc2, ec2_gateways, logger)
+            ec2_gateways, logger, between=[vpc1, vpc2])
         vpc_peering_relationship.destroy()
 
         logger.info.assert_any_call(
