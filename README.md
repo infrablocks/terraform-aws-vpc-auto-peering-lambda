@@ -45,7 +45,7 @@ a VPC lifecycle change, such as when a VPC is provisioned or destroyed.
 
 The diagram below shows how these modules work together:
 
-TODO: draw diagram.
+![Diagram of architecture used by this module](https://raw.githubusercontent.com/infrablocks/terraform-aws-vpc-auto-peering-lambda/master/docs/architecture.png)
 
 Usage
 -----
