@@ -1,7 +1,7 @@
 Terraform AWS VPC Auto Peering
 ==============================
 
-[![CircleCI](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering.svg?style=svg)](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering)
+[![CircleCI](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering-lambda.svg?style=svg)](https://circleci.com/gh/infrablocks/terraform-aws-vpc-auto-peering-lambda)
 
 A Terraform module for automatically peering VPCs based on dependency 
 information stored in tags.
@@ -195,7 +195,7 @@ Contributing
 ------------
 
 Bug reports and pull requests are welcome on GitHub at 
-https://github.com/infrablocks/terraform-aws-vpc-auto-peering. 
+https://github.com/infrablocks/terraform-aws-vpc-auto-peering-lambda. 
 This project is intended to be a safe, welcoming space for collaboration, and 
 contributors are expected to adhere to 
 the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
