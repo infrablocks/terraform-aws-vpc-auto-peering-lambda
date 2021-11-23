@@ -47,6 +47,11 @@ The diagram below shows how these modules work together:
 
 ![Diagram of architecture used by this module](https://raw.githubusercontent.com/infrablocks/terraform-aws-vpc-auto-peering-lambda/master/docs/architecture.png)
 
+Note that for this to work, the `terraform-aws-infrastructure-events` and
+`terraform-aws-vpc-auto-peering-lambda` modules should be created in one 
+Terraform configuration while the `terraform-aws-vpc-lifecycle-event` module
+should be used in the configuration that manages the VPC.
+
 Usage
 -----
 
