@@ -52,6 +52,23 @@ Note that for this to work, the `terraform-aws-infrastructure-events` and
 Terraform configuration while the `terraform-aws-vpc-lifecycle-event` module
 should be used in the configuration that manages the VPC.
 
+In addition to the event infrastructure, the VPC auto peering lambda also needs
+a role to be available in each of the accounts in which it should manage
+peering, with the same name. The 
+[`terraform-aws-vpc-auto-peering-role`](https://github.com/infrablocks/terraform-aws-vpc-auto-peering-role)
+module can provision a role with the required policy.
+
+Implementation
+--------------
+
+Upon receiving an event indicating VPC creation, the VPC auto peering lambda
+looks up the created VPC based on the account ID and VPC ID in the VPC lifecycle
+event. It then concatenates the values of the `Component` and 
+`DeploymentIdentifier` tags on the VPC to form the "component deployment 
+identifier".
+
+TODO: finish this.
+
 Usage
 -----
 
