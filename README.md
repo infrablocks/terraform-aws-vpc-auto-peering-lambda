@@ -9,7 +9,7 @@ information stored in tags.
 The VPC auto peering lambda requires:
 
 * An SNS topic which receives events whenever a VPC is created or destroyed
-* A role to assume in order to create or destroy the peering connection and 
+* A role to assume in order to create or destroy the peering connection and
   routes
 
 The VPC auto peering lambda consists of:
@@ -18,26 +18,31 @@ The VPC auto peering lambda consists of:
 * A subscription to the SNS topic
 * IAM roles and policies allowing the lambda to function
 
+The VPC auto peering lambda:
+
+* automatically configures VPC peering both within and across regions and both
+  within and across accounts; and
+* configures bi-directional routing between the peered VPCs.
+
 Architecture
 ------------
 
-The VPC auto-peering lambda automatically creates peering connections and
-routes between VPCs based on relationships declared by each VPC via tags. In 
-order to achieve this, the lambda needs to know when VPCs are provisioned and 
-destroyed. 
+The VPC auto-peering lambda automatically creates peering connections and routes
+between VPCs based on relationships declared by each VPC via tags. In order to
+achieve this, the lambda needs to know when VPCs are provisioned and destroyed.
 
-Since AWS doesn't provide any built in events for VPC lifecycle, the
-lambda relies on an alternative approach for such events, as provided by the
+Since AWS doesn't provide any built in events for VPC lifecycle, the lambda
+relies on an alternative approach for such events, as provided by the
 [`terraform-aws-vpc-lifecycle-event`](https://github.com/infrablocks/terraform-aws-vpc-lifecycle-event)
 and
 [`terraform-aws-infrastructure-events`](https://github.com/infrablocks/terraform-aws-infrastructure-events)
 modules.
 
 The `terraform-aws-infrastructure-events` module uses S3 objects to represent
-provisions and destroys of pieces of infrastructure, converting the 
+provisions and destroys of pieces of infrastructure, converting the
 corresponding object creations and deletions into messages in an SNS topic. In
-this way, Terraform configurations can signal changes to infrastructure by 
-creating or deleting an S3 object whose key includes information about that 
+this way, Terraform configurations can signal changes to infrastructure by
+creating or deleting an S3 object whose key includes information about that
 infrastructure.
 
 The `terraform-aws-vpc-lifecycle-event` module uses this mechanism to notify of
@@ -48,24 +53,109 @@ The diagram below shows how these modules work together:
 ![Diagram of architecture used by this module](https://raw.githubusercontent.com/infrablocks/terraform-aws-vpc-auto-peering-lambda/master/docs/architecture.png)
 
 Note that for this to work, the `terraform-aws-infrastructure-events` and
-`terraform-aws-vpc-auto-peering-lambda` modules should be created in one 
+`terraform-aws-vpc-auto-peering-lambda` modules should be created in one
 Terraform configuration while the `terraform-aws-vpc-lifecycle-event` module
 should be used in the configuration that manages the VPC.
 
 In addition to the event infrastructure, the VPC auto peering lambda also needs
 a role to be available in each of the accounts in which it should manage
-peering, with the same name. The 
+peering, with the same name. The
 [`terraform-aws-vpc-auto-peering-role`](https://github.com/infrablocks/terraform-aws-vpc-auto-peering-role)
 module can provision a role with the required policy.
+
+The `terraform-aws-vpc-auto-peering-lambda` module additionally expects a
+certain tag protocol to be followed on created VPCs and route tables as
+described in the [Implementation](#implementation) section below. The
+[`terraform-aws-base-networking`](https://github.com/infrablocks/terraform-aws-base-networking)
+module implements this protocol and is designed to work with this module.
 
 Implementation
 --------------
 
+### On VPC provisioning
+
 Upon receiving an event indicating VPC creation, the VPC auto peering lambda
-looks up the created VPC based on the account ID and VPC ID in the VPC lifecycle
-event. It then concatenates the values of the `Component` and 
-`DeploymentIdentifier` tags on the VPC to form the "component deployment 
-identifier".
+looks up both the created VPC based on the account ID and VPC ID in the VPC
+lifecycle event as well as all other VPCs within its search regions and
+accounts. Using the discovered VPCS, it determines the set of VPCs dependent on
+the newly created VPC and the set of VPCs on which the newly created VPC
+depends.
+
+The dependents and dependencies of each VPC are defined in terms of the VPC's
+"component deployment identifier" which is the concatenation of the values of
+the `Component` and `DeploymentIdentifier` tags on the VPC. For example, given a
+VPC with the following tags:
+
+```hcl
+resource "aws_vpc" "vpc_1" {
+  // ...
+
+  tags = {
+    Component            = "application-network"
+    DeploymentIdentifier = "development-1"
+    // ...
+  }
+}
+```
+
+the component deployment identifier would be
+`"application-network-development-1"`.
+
+Using these component deployment identifiers, VPC dependencies are then defined
+using the `Dependencies` tag. For example, in the following `vpc_1` is both
+dependent on `vpc_2` and a dependency of `vpc_3`:
+
+```hcl
+resource "aws_vpc" "vpc_1" {
+  // ...
+
+  tags = {
+    Component            = "application-network"
+    DeploymentIdentifier = "development-1"
+    Dependencies         = "integration-network-development-1"
+    // ...
+  }
+}
+
+resource "aws_vpc" "vpc_2" {
+  // ...
+
+  tags = {
+    Component            = "integration-network"
+    DeploymentIdentifier = "development-1"
+    // ...
+  }
+}
+
+resource "aws_vpc" "vpc_3" {
+  // ...
+
+  tags = {
+    Component            = "connectivity-network"
+    DeploymentIdentifier = "development-1"
+    Dependencies         = "application-network-development-1"
+    // ...
+  }
+}
+```
+
+The `Dependencies` tag value is a comma separated string of component deployment
+identifiers, allowing more than one dependency to be defined.
+
+Once the set of dependencies and dependents has been determined, the auto
+peering lambda requests and accepts peering connections to satisfy the overall
+dependencies given the introduction of the new VPC. For the above example, if
+`vpc_1` had just been created, peering connections would be established between
+`vpc_1` and `vpc_2` as well as between `vpc_3` and `vpc_1`.
+
+Once peering connections have been established, the auto peering lambda creates
+routes between the peered VPCs in any route tables found in each VPC that have
+a `Tier` tag with value `"private"`. When doing so, the auto peering lambda
+uses the full CIDR of each VPC within the route definition.
+
+TODO: finish this.
+
+### On VPC destruction
 
 TODO: finish this.
 
