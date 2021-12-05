@@ -325,28 +325,6 @@ To destroy the module prerequisites:
 
 ### Common Tasks
 
-#### Generate an SSH key pair
-
-To generate an SSH key pair:
-
-```
-ssh-keygen -t rsa -b 4096 -C integration-test@example.com -N '' -f config/secrets/keys/bastion/ssh
-```
-
-#### Generate a self signed certificate
-
-To generate a self signed certificate:
-
-```
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
-```
-
-To decrypt the resulting key:
-
-```
-openssl rsa -in key.pem -out ssl.key
-```
-
 #### Add a git-crypt user
 
 To adding a user to git-crypt using their GPG key:
