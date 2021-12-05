@@ -185,7 +185,7 @@ Usage
 To use the module, include something like the following in your terraform
 configuration:
 
-```hcl-terraform
+```hcl
 module "vpc-auto-peering" {
   source  = "infrablocks/vpc-auto-peering/aws"
   version = "2.0.0"
