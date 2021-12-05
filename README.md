@@ -22,7 +22,8 @@ The VPC auto peering lambda:
 
 * automatically configures VPC peering both within and across regions and both
   within and across accounts; and
-* configures bi-directional routing between the peered VPCs.
+* configures unidirectional or bidirectional routing between the peered VPCs, as
+  required.
 
 Architecture
 ------------
@@ -72,14 +73,7 @@ module implements this protocol and is designed to work with this module.
 Implementation
 --------------
 
-### On VPC provisioning
-
-Upon receiving an event indicating VPC creation, the VPC auto peering lambda
-looks up both the created VPC based on the account ID and VPC ID in the VPC
-lifecycle event as well as all other VPCs within its search regions and
-accounts. Using the discovered VPCS, it determines the set of VPCs dependent on
-the newly created VPC and the set of VPCs on which the newly created VPC
-depends.
+### Declaring dependencies
 
 The dependents and dependencies of each VPC are defined in terms of the VPC's
 "component deployment identifier" which is the concatenation of the values of
@@ -102,8 +96,8 @@ the component deployment identifier would be
 `"application-network-development-1"`.
 
 Using these component deployment identifiers, VPC dependencies are then defined
-using the `Dependencies` tag. For example, in the following `vpc_1` is both
-dependent on `vpc_2` and a dependency of `vpc_3`:
+using the `Dependencies` tag. For example, in the following, `vpc_1` is both
+dependent on `vpc_2` and `vpc_3` and is also a dependency of `vpc_3`:
 
 ```hcl
 resource "aws_vpc" "vpc_1" {
@@ -112,7 +106,7 @@ resource "aws_vpc" "vpc_1" {
   tags = {
     Component            = "application-network"
     DeploymentIdentifier = "development-1"
-    Dependencies         = "integration-network-development-1"
+    Dependencies         = "integration-network-development-1, connectivity-network-development-1"
     // ...
   }
 }
@@ -139,25 +133,51 @@ resource "aws_vpc" "vpc_3" {
 }
 ```
 
-The `Dependencies` tag value is a comma separated string of component deployment
-identifiers, allowing more than one dependency to be defined.
+As can be seen in the example above, the `Dependencies` tag value is a comma
+separated string of component deployment identifiers (whitespace ignored),
+allowing more than one dependency to be defined.
+
+### On VPC provisioning
+
+Upon receiving an event indicating VPC creation, the VPC auto peering lambda
+looks up both the created VPC based on the account ID and VPC ID in the VPC
+lifecycle event as well as all other VPCs within its search regions and
+accounts. Using the discovered VPCs, it determines the set of VPCs dependent on
+the newly created VPC and the set of VPCs on which the newly created VPC
+depends.
 
 Once the set of dependencies and dependents has been determined, the auto
 peering lambda requests and accepts peering connections to satisfy the overall
-dependencies given the introduction of the new VPC. For the above example, if
-`vpc_1` had just been created, peering connections would be established between
-`vpc_1` and `vpc_2` as well as between `vpc_3` and `vpc_1`.
+dependencies given the introduction of the new VPC. For the example given in
+[declaring dependencies](#declaring-dependencies) above, if `vpc_1` had just
+been created, peering connections would be established between `vpc_1` and
+`vpc_2` as well as between `vpc_1` and `vpc_3`.
 
 Once peering connections have been established, the auto peering lambda creates
-routes between the peered VPCs in any route tables found in each VPC that have
-a `Tier` tag with value `"private"`. When doing so, the auto peering lambda
-uses the full CIDR of each VPC within the route definition.
+a route for each defined dependency in any route tables found in the dependent
+VPC that have a `Tier` tag with value `"private"`. When doing so, the auto
+peering lambda uses the full CIDR of each VPC within the route definition.
 
-TODO: finish this.
+In this way, any routing between VPCs is only bidirectional if both VPCs declare
+a dependency on each other, otherwise the routing is unidirectional. For the
+example given in [declaring dependencies](#declaring-dependencies) above, a
+route will be created in each of `vpc_1`'s private route tables to each of
+`vpc_2` and `vpc_3`'s CIDRs. A route will also be created in `vpc_3`'s private
+route tables back to `vpc_1`'s CIDR. However, no route will be created in
+`vpc_2`'s private route tables.
 
 ### On VPC destruction
 
-TODO: finish this.
+Upon receiving an event indicating VPC deletion, the VPC auto peering lambda
+performs the reverse operation. It looks up both the deleted VPC based on the
+account ID and VPC ID in the VPC lifecycle event as well as all other VPCs
+within its search regions and accounts. Using the discovered VPCs, it determines
+the set of VPCs that were dependent on the newly deleted VPC and the set of VPCs
+on which the deleted VPC depended.
+
+Using this information, the auto peering lambda deletes the corresponding routes
+from the private route tables of any VPCs that previously had a relationship
+with the deleted VPC, before deleting any peering connections.
 
 Usage
 -----
@@ -168,14 +188,28 @@ configuration:
 ```hcl-terraform
 module "vpc-auto-peering" {
   source  = "infrablocks/vpc-auto-peering/aws"
-  version = "0.1.12"
+  version = "2.0.0"
 
   region                = "eu-west-2"
   deployment_identifier = "1bc5defe"
 
+  search_regions    = ["eu-west-2", "us-east-1"]
+  search_accounts   = ["554132201093", "554132201093"]
+  peering_role_name = "auto-peering-role"
+
   infrastructure_events_topic_arn = "arn:aws:sns:eu-west-2:579878096224:infrastructure-events-topic-eu-west-2-335e1e54"
 }
 ```
+
+Note:
+* If the `search_regions` variable is not supplied, it defaults to the value of 
+  the `region` variable, i.e., the region in which the lambda is deployed
+* If the `search_accounts` variable is not supplied, it defaults to the account
+  in which the lambda is deployed
+* If the `peering_role_name` variable is not supplied, it defaults to 
+  `"vpc-auto-peering-role"` which is the name of the role created by the
+  [`terraform-aws-vpc-auto-peering-role`](https://github.com/infrablocks/terraform-aws-vpc-auto-peering-role)
+  module.
 
 See the
 [Terraform registry entry](https://registry.terraform.io/modules/infrablocks/vpc-auto-peering-lambda/aws/latest)
