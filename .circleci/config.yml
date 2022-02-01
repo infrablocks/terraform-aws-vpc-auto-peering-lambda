@@ -3,7 +3,7 @@ jobs:
   test:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.6.0
+      - image: ruby:2.7.5
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
@@ -12,7 +12,7 @@ jobs:
   prerelease:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.6.0
+      - image: ruby:2.7.5
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
@@ -20,7 +20,7 @@ jobs:
   release:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.6.0
+      - image: ruby:2.7.5
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
