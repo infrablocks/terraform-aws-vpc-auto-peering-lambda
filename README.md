@@ -51,7 +51,7 @@ a VPC lifecycle change, such as when a VPC is provisioned or destroyed.
 
 The diagram below shows how these modules work together:
 
-![Diagram of architecture used by this module](https://raw.githubusercontent.com/infrablocks/terraform-aws-vpc-auto-peering-lambda/master/docs/architecture.png)
+![Diagram of architecture used by this module](https://raw.githubusercontent.com/infrablocks/terraform-aws-vpc-auto-peering-lambda/main/docs/architecture.png)
 
 Note that for this to work, the `terraform-aws-infrastructure-events` and
 `terraform-aws-vpc-auto-peering-lambda` modules should be created in one
