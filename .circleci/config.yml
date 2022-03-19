@@ -1,18 +1,23 @@
 version: 2.1
+orbs:
+  queue: eddiewebb/queue@1.6.4
 jobs:
   test:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.7.5
+      - image: ruby:3.1.1
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
       - run: ./scripts/ci/common/install-pyenv.sh
+      - run: ./scripts/ci/common/install-orb-deps.sh
+      - queue/until_front_of_line:
+          consider-branch: false
       - run: ./scripts/ci/steps/test.sh
   prerelease:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.7.5
+      - image: ruby:3.1.1
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
@@ -20,7 +25,7 @@ jobs:
   release:
     working_directory: ~/terraform-aws-vpc-auto-peering
     docker:
-      - image: ruby:2.7.5
+      - image: ruby:3.1.1
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
@@ -28,13 +33,14 @@ jobs:
   merge_pull_request:
     working_directory: ~/source
     docker:
-      - image: ruby:2.7.5
+      - image: ruby:3.1.1
     steps:
       - checkout
       - run: ./scripts/ci/common/install-git-crypt.sh
       - run: ./scripts/ci/common/install-gpg-key.sh
       - run: ./scripts/ci/common/configure-git.sh
       - run: ./scripts/ci/steps/merge-pull-request.sh
+
 workflows:
   version: 2
   pipeline:
