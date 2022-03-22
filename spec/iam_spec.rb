@@ -16,7 +16,7 @@ describe 'IAM policies, profiles and roles' do
 
     it 'can be assumed by lambda' do
       actual = JSON.parse(
-          URI.decode(subject.assume_role_policy_document),
+        CGI.unescape(subject.assume_role_policy_document),
           symbolize_names: true)
       expected = {
           Version: "2012-10-17",
