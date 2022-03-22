@@ -46,6 +46,7 @@ commands:
     steps:
       - run: ./scripts/ci/common/install-git-crypt.sh
       - run: ./scripts/ci/common/install-gpg-key.sh
+      - run: ./scripts/ci/common/install-pyenv.sh
       - run: ./scripts/ci/common/install-orb-deps.sh
       - run: ./scripts/ci/common/configure-git.sh
 
