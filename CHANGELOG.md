@@ -1,3 +1,10 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+* The version of the Python lambda runtime used internally has been bumped to
+  3.9.
+
 ## 2.0.0 (May 28th, 2021)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:

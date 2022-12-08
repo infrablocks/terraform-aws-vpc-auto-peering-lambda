@@ -1,0 +1,11 @@
+---
+configuration_directory: "%{cwd}/examples/full"
+state_file: "%{cwd}/state/full.tfstate"
+vars:
+  region: "%{hiera('region')}"
+
+  deployment_identifier: "%{hiera('deployment_identifier')}"
+
+  search_regions: "%{hiera('search_regions')}"
+  search_accounts: "%{hiera('search_accounts')}"
+  peering_role_name: "%{hiera('peering_role_name')}"

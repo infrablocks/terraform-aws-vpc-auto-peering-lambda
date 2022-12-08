@@ -33,9 +33,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
 # Terraform
+state/
 .terraform
+*.tfplan
 *.tfstate
 *.tfstate.backup
-state

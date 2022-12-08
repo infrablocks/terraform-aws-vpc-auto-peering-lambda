@@ -2,6 +2,13 @@
 region: 'eu-west-2'
 
 component: 'test'
+deployment_identifier: "%{hiera('seed')}"
 
-work_directory: 'build'
-configuration_directory: "%{hiera('work_directory')}/%{hiera('source_directory')}"
+search_regions:
+  - "eu-west-1"
+  - "eu-west-2"
+
+search_accounts:
+  - "325795806661"
+
+peering_role_name: "auto-peering-role"

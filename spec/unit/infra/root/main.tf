@@ -7,8 +7,7 @@ data "terraform_remote_state" "prerequisites" {
 }
 
 module "vpc_auto_peering_lambda" {
-  # This makes absolutely no sense. I think there's a bug in terraform.
-  source = "./../../../../../../../"
+  source = "./../../../../"
 
   region = var.region
   deployment_identifier = var.deployment_identifier

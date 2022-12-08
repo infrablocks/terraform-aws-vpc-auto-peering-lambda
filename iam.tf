@@ -1,7 +1,7 @@
 locals {
   assumable_roles = [
-    for account in var.search_accounts:
-          "arn:aws:iam::${account}:role/${var.peering_role_name}"
+    for account in local.search_accounts:
+          "arn:aws:iam::${account}:role/${local.peering_role_name}"
   ]
 }
 
