@@ -247,6 +247,7 @@ namespace :test do
     end
   end
 
+  desc "Run all tests"
   task all: %w[test:unit:all test:integration:all]
 end
 
