@@ -14,6 +14,7 @@ build/
 dist/
 .bundle
 .rakeTasks
+.direnv
 
 # OS
 .DS_Store
@@ -28,10 +29,7 @@ run/logs/
 .rspec_status
 
 # Python
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+__pycache__
 
 # Terraform
 state/
